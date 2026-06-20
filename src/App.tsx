@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import * as THREE from 'three';
 import { 
   Upload, 
   RotateCw, 
@@ -23,6 +24,8 @@ import {
   generateRobloxShirtCanvas,
   generateRobloxPantsCanvas
 } from './modules/RobloxClothingExporter';
+import { buildRobloxAvatar } from './modules/RobloxAvatarBuilder';
+import { I18nProvider, useTranslation } from './modules/i18n';
 
 // Programmatic generator for a default Steve skin with a 3D Gold Crown Overlay
 function generateSteveSkin(): HTMLImageElement {
@@ -124,6 +127,15 @@ function generateSteveSkin(): HTMLImageElement {
 }
 
 export default function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
+  );
+}
+
+function AppContent() {
+  const { t, language, setLanguage } = useTranslation();
   const [skinImage, setSkinImage] = useState<HTMLImageElement | null>(null);
   const [skinSrc, setSkinSrc] = useState<string>('');
   const [extractedFaces, setExtractedFaces] = useState<ExtractedFaces | null>(null);
@@ -142,6 +154,8 @@ export default function App() {
   const robloxPantsCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fullShirtCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fullPantsCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const robloxContainerRef = useRef<HTMLDivElement | null>(null);
+  const robloxViewerRef = useRef<ThreeViewer | null>(null);
 
 
 
@@ -162,48 +176,55 @@ export default function App() {
     };
   }, []);
 
-  // 2. Initialize ThreeViewer once
+  // 2. Initialize and update the 3D Head viewer (for head3d module)
   useEffect(() => {
-    if (containerRef.current && !viewerRef.current) {
-      const viewer = new ThreeViewer(containerRef.current);
-      viewerRef.current = viewer;
-      viewer.autoRotate = autoRotate;
-      viewer.setGridVisible(showGrid);
-      
-      if (skinImage) {
-        const headGroup = build3DHead(skinImage);
-        viewer.setHeadModel(headGroup);
+    if (activeModule === 'head3d') {
+      if (containerRef.current && !viewerRef.current) {
+        const viewer = new ThreeViewer(containerRef.current);
+        viewerRef.current = viewer;
+        viewer.setGridY(-5);
       }
-    }
-
-    return () => {
+      if (viewerRef.current) {
+        viewerRef.current.autoRotate = autoRotate;
+        viewerRef.current.setGridVisible(showGrid);
+        if (skinImage) {
+          const headGroup = build3DHead(skinImage);
+          viewerRef.current.setHeadModel(headGroup);
+        }
+      }
+    } else {
       if (viewerRef.current) {
         viewerRef.current.destroy();
         viewerRef.current = null;
       }
-    };
-  }, []);
-
-  // 3. Update the 3D model when skinImage changes
-  useEffect(() => {
-    if (viewerRef.current && skinImage) {
-      const headGroup = build3DHead(skinImage);
-      viewerRef.current.setHeadModel(headGroup);
     }
-  }, [skinImage]);
+  }, [activeModule, skinImage, autoRotate, showGrid]);
 
-  // 4. Update viewer options when React state updates
+  // 3. Initialize and update the 3D Roblox Avatar viewer (for roblox module)
   useEffect(() => {
-    if (viewerRef.current) {
-      viewerRef.current.autoRotate = autoRotate;
+    if (activeModule === 'roblox') {
+      if (robloxContainerRef.current && !robloxViewerRef.current) {
+        const viewer = new ThreeViewer(robloxContainerRef.current);
+        robloxViewerRef.current = viewer;
+        viewer.setGridY(-2);
+        // Default camera to frontal view looking at torso
+        viewer.resetCamera(new THREE.Vector3(0, 1, 8), new THREE.Vector3(0, 1, 0));
+      }
+      if (robloxViewerRef.current) {
+        robloxViewerRef.current.autoRotate = autoRotate;
+        robloxViewerRef.current.setGridVisible(showGrid);
+        if (skinImage) {
+          const avatarGroup = buildRobloxAvatar(skinImage);
+          robloxViewerRef.current.setHeadModel(avatarGroup);
+        }
+      }
+    } else {
+      if (robloxViewerRef.current) {
+        robloxViewerRef.current.destroy();
+        robloxViewerRef.current = null;
+      }
     }
-  }, [autoRotate]);
-
-  useEffect(() => {
-    if (viewerRef.current) {
-      viewerRef.current.setGridVisible(showGrid);
-    }
-  }, [showGrid]);
+  }, [activeModule, skinImage, autoRotate, showGrid]);
 
   // 5. Draw Roblox clothing previews (character assembly and full flat templates)
   useEffect(() => {
@@ -251,9 +272,10 @@ export default function App() {
       setSkinImage(result.image);
       setSkinSrc(result.image.src);
       setExtractedFaces(extractFaces(result.image));
-      showToast('success', '¡Skin cargada y procesada con éxito!');
-    } else if (result.error) {
-      showToast('error', result.error);
+      showToast('success', t('toast_skin_success'));
+    } else {
+      const errorMsg = result.errorKey ? t(result.errorKey, result.errorParams) : t('err_generic');
+      showToast('error', errorMsg);
     }
   };
 
@@ -292,18 +314,18 @@ export default function App() {
     if (!viewerRef.current) return;
     const headModel = viewerRef.current.getHeadModel();
     if (!headModel) {
-      showToast('error', 'No hay ningún modelo 3D cargado para exportar.');
+      showToast('error', t('toast_no_3d_model'));
       return;
     }
     if (!skinImage) {
-      showToast('error', 'Carga una skin para poder exportarla.');
+      showToast('error', t('toast_load_skin_first'));
       return;
     }
     try {
       await exportToOBJ(headModel, skinImage);
-      showToast('success', '¡Archivos cabeza.obj, cabeza.mtl y textura.png descargados!');
+      showToast('success', t('toast_obj_success'));
     } catch (err: any) {
-      showToast('error', `Error al exportar OBJ: ${err.message}`);
+      showToast('error', t('toast_obj_error', { error: err.message }));
     }
   };
 
@@ -311,18 +333,18 @@ export default function App() {
     if (!viewerRef.current) return;
     const headModel = viewerRef.current.getHeadModel();
     if (!headModel) {
-      showToast('error', 'No hay ningún modelo 3D cargado para exportar.');
+      showToast('error', t('toast_no_3d_model'));
       return;
     }
     if (!skinImage) {
-      showToast('error', 'Carga una skin para poder exportarla.');
+      showToast('error', t('toast_load_skin_first'));
       return;
     }
     try {
       await exportToFBX(headModel, skinImage);
-      showToast('success', '¡Modelo cabeza.fbx descargado!');
+      showToast('success', t('toast_fbx_success'));
     } catch (err: any) {
-      showToast('error', `Error al exportar FBX: ${err.message}`);
+      showToast('error', t('toast_fbx_error', { error: err.message }));
     }
   };
 
@@ -330,57 +352,63 @@ export default function App() {
     if (!viewerRef.current) return;
     const headModel = viewerRef.current.getHeadModel();
     if (!headModel) {
-      showToast('error', 'No hay ningún modelo 3D cargado para exportar.');
+      showToast('error', t('toast_no_3d_model'));
       return;
     }
 
     try {
       await exportToGLB(headModel);
-      showToast('success', '¡Modelo cabeza.glb descargado!');
+      showToast('success', t('toast_glb_success'));
     } catch (err: any) {
-      showToast('error', `Error al exportar GLB: ${err.message}`);
+      showToast('error', t('toast_glb_error', { error: err.message }));
     }
   };
 
   const handleExportBBModel = () => {
     if (!skinImage) {
-      showToast('error', 'Carga una skin para poder exportarla a Blockbench.');
+      showToast('error', t('toast_bbmodel_load_skin'));
       return;
     }
 
     try {
       exportToBBModel(skinImage);
-      showToast('success', '¡Modelo cabeza.bbmodel descargado!');
+      showToast('success', t('toast_bbmodel_success'));
     } catch (err: any) {
-      showToast('error', `Error al exportar .bbmodel: ${err.message}`);
+      showToast('error', t('toast_bbmodel_error', { error: err.message }));
     }
   };
 
   const handleExportRobloxShirt = async () => {
     if (!skinImage) {
-      showToast('error', 'Carga una skin para poder exportar a Roblox.');
+      showToast('error', t('toast_load_skin_for_roblox'));
       return;
     }
 
     try {
       await exportRobloxShirt(skinImage);
-      showToast('success', '¡Roblox Shirt (shirt.png) descargado con éxito!');
+      showToast('success', t('toast_shirt_success'));
     } catch (err: any) {
-      showToast('error', `Error al exportar Roblox Shirt: ${err.message}`);
+      showToast('error', t('toast_shirt_error', { error: err.message }));
     }
   };
 
   const handleExportRobloxPants = async () => {
     if (!skinImage) {
-      showToast('error', 'Carga una skin para poder exportar a Roblox.');
+      showToast('error', t('toast_load_skin_for_roblox'));
       return;
     }
 
     try {
       await exportRobloxPants(skinImage);
-      showToast('success', '¡Roblox Pants (pants.png) descargado con éxito!');
+      showToast('success', t('toast_pants_success'));
     } catch (err: any) {
-      showToast('error', `Error al exportar Roblox Pants: ${err.message}`);
+      showToast('error', t('toast_pants_error', { error: err.message }));
+    }
+  };
+
+  const handleResetRobloxCamera = () => {
+    if (robloxViewerRef.current) {
+      robloxViewerRef.current.resetCamera(new THREE.Vector3(0, 1, 8), new THREE.Vector3(0, 1, 0));
     }
   };
 
@@ -394,8 +422,8 @@ export default function App() {
         <div className="logo-container">
           <Box className="logo-icon" size={32} style={{ color: '#818cf8' }} />
           <div>
-            <h1 className="logo-text" style={{ margin: 0 }}>MINECRAFT SKIN TOOL</h1>
-            <p style={{ margin: 0, fontSize: '0.8rem', color: '#a1a1aa' }}>Modelo 3D & Ropa Roblox</p>
+            <h1 className="logo-text" style={{ margin: 0 }}>{t('app_title')}</h1>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: '#a1a1aa' }}>{t('app_subtitle')}</p>
           </div>
         </div>
 
@@ -405,17 +433,35 @@ export default function App() {
             className={`nav-btn ${activeModule === 'head3d' ? 'active' : ''}`}
             onClick={() => setActiveModule('head3d')}
           >
-            Modelo Cabeza 3D
+            {t('module_3d_head')}
           </button>
           <button 
             className={`nav-btn ${activeModule === 'roblox' ? 'active' : ''}`}
             onClick={() => setActiveModule('roblox')}
           >
-            Plantillas Ropa Roblox
+            {t('module_roblox')}
           </button>
         </nav>
 
-        <span className="badge">v1.1</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className="i18n-selector-container" style={{ display: 'flex', gap: '4px', background: 'rgba(255, 255, 255, 0.03)', padding: '2px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <button 
+              className={`tab-btn ${language === 'en' ? 'active' : ''}`}
+              onClick={() => setLanguage('en')}
+              style={{ padding: '4px 8px', fontSize: '0.75rem', minWidth: '32px', flex: 'none' }}
+            >
+              EN
+            </button>
+            <button 
+              className={`tab-btn ${language === 'es' ? 'active' : ''}`}
+              onClick={() => setLanguage('es')}
+              style={{ padding: '4px 8px', fontSize: '0.75rem', minWidth: '32px', flex: 'none' }}
+            >
+              ES
+            </button>
+          </div>
+          <span className="badge">v1.1</span>
+        </div>
       </header>
 
       {/* Main Grid Workspace */}
@@ -423,8 +469,8 @@ export default function App() {
         {/* Left Side: Uploading and 2D Previews */}
         <section className="glass-panel sidebar-panel">
           <div>
-            <h2 style={{ margin: '0 0 4px 0', fontSize: '1.2rem', fontWeight: 700 }}>1. Subir Skin</h2>
-            <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: '#a1a1aa' }}>Arrastra tu archivo PNG de 64x64 o búscalo en tu equipo.</p>
+            <h2 style={{ margin: '0 0 4px 0', fontSize: '1.2rem', fontWeight: 700 }}>{t('upload_title')}</h2>
+            <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: '#a1a1aa' }}>{t('upload_desc')}</p>
             
             <input 
               ref={fileInputRef}
@@ -443,15 +489,15 @@ export default function App() {
               onClick={triggerUploadClick}
             >
               <Upload size={36} style={{ color: '#818cf8', marginBottom: '8px' }} />
-              <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem', fontWeight: 600 }}>Seleccionar Skin PNG</p>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: '#71717a' }}>Solo formato PNG (64x64 px)</p>
+              <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem', fontWeight: 600 }}>{t('upload_btn')}</p>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: '#71717a' }}>{t('upload_format_hint')}</p>
             </div>
           </div>
 
           {/* Skin Image Preview (Only for 3D Head Module to avoid showing head in clothing mode) */}
           {activeModule === 'head3d' && skinSrc && (
             <div className="skin-preview-section">
-              <h3 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 600 }}>Skin Original</h3>
+              <h3 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 600 }}>{t('skin_original')}</h3>
               <div className="skin-canvas-container">
                 <img 
                   src={skinSrc} 
@@ -465,20 +511,20 @@ export default function App() {
           {/* Extracted Faces grid for 3D Head Module */}
           {activeModule === 'head3d' && (
             <div>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 600 }}>Caras Extraídas (Coordenadas Oficiales)</h3>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 600 }}>{t('extracted_faces')}</h3>
               
               <div className="tabs-container">
                 <button 
                   className={`tab-btn ${activeTab === 'head' ? 'active' : ''}`}
                   onClick={() => setActiveTab('head')}
                 >
-                  Capa Base (Head)
+                  {t('tab_base_layer')}
                 </button>
                 <button 
                   className={`tab-btn ${activeTab === 'overlay' ? 'active' : ''}`}
                   onClick={() => setActiveTab('overlay')}
                 >
-                  Capa Exterior (Hat)
+                  {t('tab_outer_layer')}
                 </button>
               </div>
 
@@ -502,7 +548,7 @@ export default function App() {
           {activeModule === 'roblox' && (
             <div className="skin-preview-section" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <h4 style={{ margin: '0 0 6px 0', fontSize: '0.85rem', fontWeight: 600, color: '#a1a1aa' }}>Vista del Avatar</h4>
+                <h4 style={{ margin: '0 0 6px 0', fontSize: '0.85rem', fontWeight: 600, color: '#a1a1aa' }}>{t('avatar_view')}</h4>
                 <div className="tabs-container">
                   {(['front', 'back', 'left', 'right'] as const).map((view) => (
                     <button
@@ -511,14 +557,14 @@ export default function App() {
                       onClick={() => setRobloxView(view)}
                       style={{ textTransform: 'capitalize' }}
                     >
-                      {view === 'front' ? 'Frente' : view === 'back' ? 'Espalda' : view === 'left' ? 'Izquierda' : view === 'right' ? 'Derecha' : 'Derecha'}
+                      {view === 'front' ? t('view_front') : view === 'back' ? t('view_back') : view === 'left' ? t('view_left') : t('view_right')}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <h3 style={{ margin: '0 0 6px 0', fontSize: '1rem', fontWeight: 600 }}>Vista Previa en Avatar (Shirt)</h3>
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '1rem', fontWeight: 600 }}>{t('preview_shirt')}</h3>
                 <div className="skin-canvas-container" style={{ minHeight: '160px' }}>
                   <canvas 
                     ref={robloxShirtCanvasRef} 
@@ -533,7 +579,7 @@ export default function App() {
               </div>
 
               <div>
-                <h3 style={{ margin: '0 0 6px 0', fontSize: '1rem', fontWeight: 600 }}>Vista Previa en Avatar (Pants)</h3>
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '1rem', fontWeight: 600 }}>{t('preview_pants')}</h3>
                 <div className="skin-canvas-container" style={{ minHeight: '280px' }}>
                   <canvas 
                     ref={robloxPantsCanvasRef} 
@@ -549,20 +595,20 @@ export default function App() {
 
               {/* Sidebar Clothing Export Buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
-                <h3 style={{ margin: '0', fontSize: '1rem', fontWeight: 600 }}>Exportar Ropa</h3>
+                <h3 style={{ margin: '0', fontSize: '1rem', fontWeight: 600 }}>{t('export_clothing')}</h3>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button className="glow-btn-roblox" style={{ flex: 1, padding: '10px 5px', fontSize: '0.85rem' }} onClick={handleExportRobloxShirt}>
-                    <Download size={14} /> Camisa
+                    <Download size={14} /> {t('btn_shirt')}
                   </button>
                   <button className="glow-btn-roblox" style={{ flex: 1, padding: '10px 5px', fontSize: '0.85rem' }} onClick={handleExportRobloxPants}>
-                    <Download size={14} /> Pantalón
+                    <Download size={14} /> {t('btn_pants')}
                   </button>
                 </div>
                 <button className="glow-btn" style={{ padding: '10px', background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)', boxShadow: 'none' }} onClick={async () => {
                   await handleExportRobloxShirt();
                   await handleExportRobloxPants();
                 }}>
-                  <Download size={16} /> Descargar Ambos
+                  <Download size={16} /> {t('btn_download_both')}
                 </button>
               </div>
             </div>
@@ -590,7 +636,7 @@ export default function App() {
                   />
                   <span className="checkbox-custom"></span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Grid size={16} /> Rejilla
+                    <Grid size={16} /> {t('opt_grid')}
                   </span>
                 </label>
 
@@ -604,7 +650,7 @@ export default function App() {
                   />
                   <span className="checkbox-custom"></span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <RotateCw size={16} /> Rotar
+                    <RotateCw size={16} /> {t('opt_rotate')}
                   </span>
                 </label>
               </div>
@@ -626,24 +672,71 @@ export default function App() {
             </div>
           </section>
         ) : (
-          <section className="glass-panel roblox-templates-grid">
-            <div className="template-card">
-              <h3>Plantilla Oficial Camisa (Shirt)</h3>
-              <div className="template-canvas-container">
-                <canvas ref={fullShirtCanvasRef} className="full-template-canvas" />
-              </div>
-              <button className="glow-btn-roblox" style={{ width: '100%', maxWidth: '240px' }} onClick={handleExportRobloxShirt}>
-                <Download size={18} /> Descargar Camisa
-              </button>
+          <section className="glass-panel viewer-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* 3D Roblox Avatar viewport */}
+            <div ref={robloxContainerRef} className="viewer-canvas-container" style={{ minHeight: '400px' }}>
+              {/* ThreeViewer canvas for Roblox Avatar will be appended here */}
             </div>
-            <div className="template-card">
-              <h3>Plantilla Oficial Pantalón (Pants)</h3>
-              <div className="template-canvas-container">
-                <canvas ref={fullPantsCanvasRef} className="full-template-canvas" />
+
+            {/* Toolbar & Controls */}
+            <div className="viewer-toolbar">
+              <div className="toolbar-controls">
+                {/* Toggle Grid */}
+                <label className="toggle-container">
+                  <input 
+                    type="checkbox" 
+                    checked={showGrid}
+                    onChange={(e) => setShowGrid(e.target.checked)}
+                    style={{ display: 'none' }}
+                  />
+                  <span className="checkbox-custom"></span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Grid size={16} /> {t('opt_grid')}
+                  </span>
+                </label>
+
+                {/* Toggle Rotate */}
+                <label className="toggle-container">
+                  <input 
+                    type="checkbox" 
+                    checked={autoRotate}
+                    onChange={(e) => setAutoRotate(e.target.checked)}
+                    style={{ display: 'none' }}
+                  />
+                  <span className="checkbox-custom"></span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <RotateCw size={16} /> {t('opt_rotate')}
+                  </span>
+                </label>
               </div>
-              <button className="glow-btn-roblox" style={{ width: '100%', maxWidth: '240px' }} onClick={handleExportRobloxPants}>
-                <Download size={18} /> Descargar Pantalón
-              </button>
+
+              <div className="viewer-actions">
+                <button className="glow-btn-secondary" style={{ padding: '8px 12px', fontSize: '0.85rem' }} onClick={handleResetRobloxCamera}>
+                  {t('btn_front_view')}
+                </button>
+              </div>
+            </div>
+
+            {/* 2D Templates grid */}
+            <div className="roblox-templates-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '0 24px 24px 24px' }}>
+              <div className="template-card" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('template_shirt_title')}</h3>
+                <div className="template-canvas-container" style={{ width: '100%', maxHeight: '200px', display: 'flex', justifyContent: 'center' }}>
+                  <canvas ref={fullShirtCanvasRef} className="full-template-canvas" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', border: '1px solid rgba(255,255,255,0.1)' }} />
+                </div>
+                <button className="glow-btn-roblox" style={{ width: '100%', maxWidth: '240px', padding: '10px' }} onClick={handleExportRobloxShirt}>
+                  <Download size={18} /> {t('btn_download_shirt')}
+                </button>
+              </div>
+              <div className="template-card" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('template_pants_title')}</h3>
+                <div className="template-canvas-container" style={{ width: '100%', maxHeight: '200px', display: 'flex', justifyContent: 'center' }}>
+                  <canvas ref={fullPantsCanvasRef} className="full-template-canvas" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', border: '1px solid rgba(255,255,255,0.1)' }} />
+                </div>
+                <button className="glow-btn-roblox" style={{ width: '100%', maxWidth: '240px', padding: '10px' }} onClick={handleExportRobloxPants}>
+                  <Download size={18} /> {t('btn_download_pants')}
+                </button>
+              </div>
             </div>
           </section>
         )}
