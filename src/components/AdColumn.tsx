@@ -98,7 +98,7 @@ export default function AdColumn({ position }: AdColumnProps) {
             <ins 
               className="adsbygoogle"
               style={{ display: 'inline-block', width: '160px', height: '600px' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXX" // REEMPLAZAR con tu ID de cliente real en producción
+              data-ad-client="ca-pub-1493168197961252" // Tu ID de cliente real en producción
               data-ad-slot={position === 'left' ? '1234567890' : '0987654321'} // REEMPLAZAR con tus IDs de bloques reales
               data-ad-format="vertical"
               data-full-width-responsive="false"
