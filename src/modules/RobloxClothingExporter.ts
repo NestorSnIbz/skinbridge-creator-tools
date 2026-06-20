@@ -42,8 +42,8 @@ const MC_BODY_OVERLAY: BodyPartFaces = {
   back:   { x: 32, y: 36, w: 8, h: 12 },
 };
 
-// Right Arm
-const MC_RIGHT_ARM: BodyPartFaces = {
+// Right Arm (Classic 4px)
+const MC_RIGHT_ARM_CLASSIC: BodyPartFaces = {
   top:    { x: 44, y: 16, w: 4, h: 4 },
   bottom: { x: 48, y: 16, w: 4, h: 4 },
   left:   { x: 48, y: 20, w: 4, h: 12 },
@@ -52,8 +52,8 @@ const MC_RIGHT_ARM: BodyPartFaces = {
   back:   { x: 52, y: 20, w: 4, h: 12 },
 };
 
-// Right Arm overlay (sleeve layer 2)
-const MC_RIGHT_ARM_OVERLAY: BodyPartFaces = {
+// Right Arm overlay (Classic 4px, sleeve layer 2)
+const MC_RIGHT_ARM_OVERLAY_CLASSIC: BodyPartFaces = {
   top:    { x: 44, y: 32, w: 4, h: 4 },
   bottom: { x: 48, y: 32, w: 4, h: 4 },
   left:   { x: 48, y: 36, w: 4, h: 12 },
@@ -62,8 +62,28 @@ const MC_RIGHT_ARM_OVERLAY: BodyPartFaces = {
   back:   { x: 52, y: 36, w: 4, h: 12 },
 };
 
-// Left Arm (64×64 format)
-const MC_LEFT_ARM: BodyPartFaces = {
+// Right Arm (Slim 3px)
+const MC_RIGHT_ARM_SLIM: BodyPartFaces = {
+  top:    { x: 44, y: 16, w: 3, h: 4 },
+  bottom: { x: 47, y: 16, w: 3, h: 4 },
+  left:   { x: 47, y: 20, w: 4, h: 12 },
+  front:  { x: 44, y: 20, w: 3, h: 12 },
+  right:  { x: 40, y: 20, w: 4, h: 12 },
+  back:   { x: 51, y: 20, w: 3, h: 12 },
+};
+
+// Right Arm overlay (Slim 3px, sleeve layer 2)
+const MC_RIGHT_ARM_OVERLAY_SLIM: BodyPartFaces = {
+  top:    { x: 44, y: 32, w: 3, h: 4 },
+  bottom: { x: 47, y: 32, w: 3, h: 4 },
+  left:   { x: 47, y: 36, w: 4, h: 12 },
+  front:  { x: 44, y: 36, w: 3, h: 12 },
+  right:  { x: 40, y: 36, w: 4, h: 12 },
+  back:   { x: 51, y: 36, w: 3, h: 12 },
+};
+
+// Left Arm (Classic 4px)
+const MC_LEFT_ARM_CLASSIC: BodyPartFaces = {
   top:    { x: 36, y: 48, w: 4, h: 4 },
   bottom: { x: 40, y: 48, w: 4, h: 4 },
   left:   { x: 40, y: 52, w: 4, h: 12 },
@@ -72,14 +92,34 @@ const MC_LEFT_ARM: BodyPartFaces = {
   back:   { x: 44, y: 52, w: 4, h: 12 },
 };
 
-// Left Arm overlay (sleeve layer 2)
-const MC_LEFT_ARM_OVERLAY: BodyPartFaces = {
+// Left Arm overlay (Classic 4px, sleeve layer 2)
+const MC_LEFT_ARM_OVERLAY_CLASSIC: BodyPartFaces = {
   top:    { x: 52, y: 48, w: 4, h: 4 },
   bottom: { x: 56, y: 48, w: 4, h: 4 },
   left:   { x: 56, y: 52, w: 4, h: 12 },
   front:  { x: 52, y: 52, w: 4, h: 12 },
   right:  { x: 48, y: 52, w: 4, h: 12 },
   back:   { x: 60, y: 52, w: 4, h: 12 },
+};
+
+// Left Arm (Slim 3px)
+const MC_LEFT_ARM_SLIM: BodyPartFaces = {
+  top:    { x: 36, y: 48, w: 3, h: 4 },
+  bottom: { x: 39, y: 48, w: 3, h: 4 },
+  left:   { x: 39, y: 52, w: 4, h: 12 },
+  front:  { x: 36, y: 52, w: 3, h: 12 },
+  right:  { x: 32, y: 52, w: 4, h: 12 },
+  back:   { x: 43, y: 52, w: 3, h: 12 },
+};
+
+// Left Arm overlay (Slim 3px, sleeve layer 2)
+const MC_LEFT_ARM_OVERLAY_SLIM: BodyPartFaces = {
+  top:    { x: 52, y: 48, w: 3, h: 4 },
+  bottom: { x: 55, y: 48, w: 3, h: 4 },
+  left:   { x: 55, y: 52, w: 4, h: 12 },
+  front:  { x: 52, y: 52, w: 3, h: 12 },
+  right:  { x: 48, y: 52, w: 4, h: 12 },
+  back:   { x: 59, y: 52, w: 3, h: 12 },
 };
 
 // Right Leg
@@ -263,6 +303,37 @@ function downloadCanvasAsPNG(canvas: HTMLCanvasElement, filename: string): Promi
 }
 
 
+/**
+ * Automatically detects if the Minecraft skin is Slim (3px arms / Alex) or Classic (4px arms / Steve)
+ * by checking if the unused pixel columns in the arm textures are completely transparent.
+ */
+function detectIsSlimSkin(skinData: ImageData): boolean {
+  // Check the right arm base layer unused column at x = 54, y = 20..31.
+  // (In classic Steve, this column contains valid back face pixels; in Alex, it is fully transparent).
+  let rightArmUnusedOpaque = false;
+  for (let y = 20; y < 32; y++) {
+    const idx = (y * 64 + 54) * 4;
+    // If alpha is not 0, it means there are solid pixels here, so it is Steve (classic)
+    if (skinData.data[idx + 3] !== 0) {
+      rightArmUnusedOpaque = true;
+      break;
+    }
+  }
+
+  // Check the left arm base layer unused column at x = 46, y = 52..63.
+  let leftArmUnusedOpaque = false;
+  for (let y = 52; y < 64; y++) {
+    const idx = (y * 64 + 46) * 4;
+    if (skinData.data[idx + 3] !== 0) {
+      leftArmUnusedOpaque = true;
+      break;
+    }
+  }
+
+  // It is Slim (Alex) only if BOTH unused arm texture columns are fully transparent.
+  return !rightArmUnusedOpaque && !leftArmUnusedOpaque;
+}
+
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /**
@@ -271,9 +342,11 @@ function downloadCanvasAsPNG(canvas: HTMLCanvasElement, filename: string): Promi
  * Does NOT include head or legs.
  * 
  * Composites base layer + overlay layer for pixel-perfect accuracy.
+ * Automatically detects and handles Slim (3px) and Classic (4px) arm textures.
  */
 export function generateRobloxShirtCanvas(skinImage: HTMLImageElement): HTMLCanvasElement {
   const skinData = getSkinPixels(skinImage);
+  const isSlim = detectIsSlimSkin(skinData);
 
   const canvas = document.createElement('canvas');
   canvas.width = TEMPLATE_WIDTH;
@@ -284,21 +357,27 @@ export function generateRobloxShirtCanvas(skinImage: HTMLImageElement): HTMLCanv
   // Clear to fully transparent
   ctx.clearRect(0, 0, TEMPLATE_WIDTH, TEMPLATE_HEIGHT);
 
+  // Select appropriate arm coordinates based on skin model
+  const rightArm = isSlim ? MC_RIGHT_ARM_SLIM : MC_RIGHT_ARM_CLASSIC;
+  const leftArm = isSlim ? MC_LEFT_ARM_SLIM : MC_LEFT_ARM_CLASSIC;
+  const rightArmOverlay = isSlim ? MC_RIGHT_ARM_OVERLAY_SLIM : MC_RIGHT_ARM_OVERLAY_CLASSIC;
+  const leftArmOverlay = isSlim ? MC_LEFT_ARM_OVERLAY_SLIM : MC_LEFT_ARM_OVERLAY_CLASSIC;
+
   // ── Base layers ──
   // Torso
   mapBodyPart(ctx, skinData, MC_BODY, ROBLOX_TORSO);
   // Right Arm → Right limb position on template
-  mapBodyPart(ctx, skinData, MC_RIGHT_ARM, ROBLOX_RIGHT_LIMB);
+  mapBodyPart(ctx, skinData, rightArm, ROBLOX_RIGHT_LIMB);
   // Left Arm → Left limb position on template
-  mapBodyPart(ctx, skinData, MC_LEFT_ARM, ROBLOX_LEFT_LIMB);
+  mapBodyPart(ctx, skinData, leftArm, ROBLOX_LEFT_LIMB);
 
   // ── Overlay layers (composited on top) ──
   // Body overlay (jacket)
   mapBodyPart(ctx, skinData, MC_BODY_OVERLAY, ROBLOX_TORSO);
   // Right Arm overlay (right sleeve)
-  mapBodyPart(ctx, skinData, MC_RIGHT_ARM_OVERLAY, ROBLOX_RIGHT_LIMB);
+  mapBodyPart(ctx, skinData, rightArmOverlay, ROBLOX_RIGHT_LIMB);
   // Left Arm overlay (left sleeve)
-  mapBodyPart(ctx, skinData, MC_LEFT_ARM_OVERLAY, ROBLOX_LEFT_LIMB);
+  mapBodyPart(ctx, skinData, leftArmOverlay, ROBLOX_LEFT_LIMB);
 
   return canvas;
 }
