@@ -9,10 +9,32 @@ export interface TranslationDictionary {
 export const translations: Record<Language, TranslationDictionary> = {
   en: {
     // Header
+    nav_dashboard: "Dashboard",
     app_title: "MINECRAFT SKIN TOOL",
     app_subtitle: "3D Model & Roblox Clothing",
     module_3d_head: "3D Head Model",
     module_roblox: "Roblox Clothing Templates",
+    
+    // Dashboard
+    dash_welcome: "Welcome back, Creator!",
+    dash_subtitle: "Manage your skins, export to 3D software, or convert to classic Roblox templates from a single centralized hub.",
+    dash_head3d_title: "3D Head Model Creator",
+    dash_head3d_desc: "Extract and build a 3D blocky head model with automatic overlay support. Perfect for Blender, Unity, or Blockbench projects.",
+    dash_roblox_title: "Roblox Classic Clothing Converter",
+    dash_roblox_desc: "Convert Minecraft skins into official Roblox Classic Shirt and Pants templates, with real-time preview on a full 3D R6 dummy character.",
+    dash_launch_workspace: "Launch Workspace",
+    dash_stats_title: "Application Analytics & Usage Trends",
+    dash_stat_conversions: "Total Conversions",
+    dash_stat_exports: "Files Exported",
+    dash_stat_favorite: "Top Format",
+    dash_stat_favorite_tool: "Top Workspace",
+    dash_recent_activity: "Recent Activity Log",
+    dash_no_activity: "No recent activity recorded yet. Start converting!",
+    
+    // Activity Log
+    act_upload: "Uploaded skin: {name}",
+    act_export: "Exported {format} file: {name}",
+    act_visit: "Visited {tool} workspace",
     
     // Sidebar Upload
     upload_title: "1. Upload Skin",
@@ -78,10 +100,32 @@ export const translations: Record<Language, TranslationDictionary> = {
   },
   es: {
     // Header
+    nav_dashboard: "Panel",
     app_title: "MINECRAFT SKIN TOOL",
     app_subtitle: "Modelo 3D & Ropa Roblox",
     module_3d_head: "Modelo Cabeza 3D",
     module_roblox: "Plantillas Ropa Roblox",
+    
+    // Dashboard
+    dash_welcome: "¡Bienvenido, Creador!",
+    dash_subtitle: "Administra tus skins, expórtalas a software 3D o conviértelas en plantillas de Roblox desde una misma plataforma centralizada.",
+    dash_head3d_title: "Creador de Cabeza 3D",
+    dash_head3d_desc: "Extrae y construye un modelo 3D de la cabeza con soporte automático de sombreros. Perfecto para proyectos en Blender, Unity o Blockbench.",
+    dash_roblox_title: "Conversor de Ropa Roblox",
+    dash_roblox_desc: "Convierte skins de Minecraft en plantillas oficiales de Roblox Shirt y Pants, con vista previa 3D interactiva sobre un dummy R6.",
+    dash_launch_workspace: "Iniciar Espacio de Trabajo",
+    dash_stats_title: "Análisis de Uso y Tendencias",
+    dash_stat_conversions: "Conversiones Totales",
+    dash_stat_exports: "Archivos Exportados",
+    dash_stat_favorite: "Formato Favorito",
+    dash_stat_favorite_tool: "Espacio Favorito",
+    dash_recent_activity: "Registro de Actividad Reciente",
+    dash_no_activity: "No hay actividad reciente. ¡Comienza a realizar conversiones!",
+    
+    // Activity Log
+    act_upload: "Subió la skin: {name}",
+    act_export: "Exportó archivo {format}: {name}",
+    act_visit: "Visitó el espacio de trabajo de {tool}",
     
     // Sidebar Upload
     upload_title: "1. Subir Skin",
