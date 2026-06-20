@@ -291,19 +291,19 @@ export default function RobloxWorkspace({
 
         {/* 2D Templates grid */}
         <div className="roblox-templates-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '0 24px 24px 24px' }}>
-          <div className="template-card" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <div className="template-card">
             <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('template_shirt_title')}</h3>
             <div className="template-canvas-container" style={{ width: '100%', maxHeight: '200px', display: 'flex', justifyContent: 'center' }}>
-              <canvas ref={fullShirtCanvasRef} className="full-template-canvas" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <canvas ref={fullShirtCanvasRef} className="full-template-canvas" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', border: '1px solid rgba(255, 255, 255, 0.1)' }} />
             </div>
             <button className="glow-btn-roblox" style={{ width: '100%', maxWidth: '240px', padding: '10px' }} onClick={handleExportRobloxShirt}>
               <Download size={18} /> {t('btn_download_shirt')}
             </button>
           </div>
-          <div className="template-card" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <div className="template-card">
             <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('template_pants_title')}</h3>
             <div className="template-canvas-container" style={{ width: '100%', maxHeight: '200px', display: 'flex', justifyContent: 'center' }}>
-              <canvas ref={fullPantsCanvasRef} className="full-template-canvas" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <canvas ref={fullPantsCanvasRef} className="full-template-canvas" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', border: '1px solid rgba(255, 255, 255, 0.1)' }} />
             </div>
             <button className="glow-btn-roblox" style={{ width: '100%', maxWidth: '240px', padding: '10px' }} onClick={handleExportRobloxPants}>
               <Download size={18} /> {t('btn_download_pants')}

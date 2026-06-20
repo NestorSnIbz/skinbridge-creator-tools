@@ -13,6 +13,26 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Premium Design System Variables */
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-glow: rgba(99, 102, 241, 0.4);
+  --roblox-red: #ff4747;
+  --roblox-red-hover: #d91414;
+  --roblox-red-glow: rgba(217, 20, 20, 0.4);
+  
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  --glass-bg: rgba(15, 15, 20, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(99, 102, 241, 0.25);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  /* Native CSS Scrollbar (Firefox support) */
+  scrollbar-color: #27272a #09090b;
+  scrollbar-width: thin;
 }
 
 body {
@@ -23,7 +43,27 @@ body {
   overflow-x: hidden;
 }
 
-/* Custom Scrollbar */
+/* WCAG Keyboard Focus Accessibility Indicators */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+
+/* Prevent outline on mouse click */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Text Wrapping Enhancements for Typographical Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+p, li, blockquote {
+  text-wrap: pretty;
+}
+
+/* Custom Webkit Scrollbars for Chrome/Edge/Safari */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -34,31 +74,32 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #27272a;
   border-radius: 4px;
+  transition: var(--transition-smooth);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4f46e5;
+  background: var(--primary);
 }
 
 /* Premium Layout & Glassmorphism Utilities */
 .glass-panel {
-  background: rgba(15, 15, 20, 0.65);
+  background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--glass-shadow);
+  transition: var(--transition-smooth);
 }
 
 .glass-panel:hover {
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: var(--glass-border-hover);
   box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.05);
 }
 
 .glow-btn {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -69,8 +110,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.4);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px 0 var(--primary-glow);
+  transition: var(--transition-smooth);
 }
 
 .glow-btn:hover {
@@ -96,7 +137,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: var(--transition-smooth);
 }
 
 .glow-btn-secondary:hover {
@@ -112,7 +153,7 @@ body {
 .glow-btn-roblox {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #ff4747 0%, #d91414 100%);
+  background: linear-gradient(135deg, var(--roblox-red) 0%, var(--roblox-red-hover) 100%);
   color: white;
   border: none;
   padding: 12px 20px;
@@ -123,8 +164,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 14px 0 rgba(217, 20, 20, 0.4);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px 0 var(--roblox-red-glow);
+  transition: var(--transition-smooth);
 }
 
 .glow-btn-roblox:hover {
@@ -287,12 +328,13 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
+  transition: var(--transition-bounce);
 }
 
 .face-card:hover {
-  border-color: rgba(99, 102, 241, 0.3);
-  transform: scale(1.03);
+  border-color: var(--primary);
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 8px 16px rgba(99, 102, 241, 0.15);
 }
 
 .face-img-container {
@@ -370,6 +412,12 @@ body {
   font-size: 0.85rem;
   color: #a1a1aa;
   cursor: pointer;
+  user-select: none;
+  transition: var(--transition-smooth);
+}
+
+.toggle-container:hover {
+  color: #f4f4f5;
 }
 
 .checkbox-custom {
@@ -378,28 +426,40 @@ body {
   height: 20px;
   background: #27272a;
   border-radius: 9999px;
-  transition: background 0.2s ease;
+  transition: var(--transition-smooth);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.toggle-container:hover .checkbox-custom {
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
 .checkbox-custom::after {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 1px;
+  left: 1px;
   width: 16px;
   height: 16px;
-  background: #a1a1aa;
+  background: #71717a;
   border-radius: 50%;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: var(--transition-smooth);
 }
 
 input:checked + .checkbox-custom {
-  background: #4f46e5;
+  background: var(--primary);
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 input:checked + .checkbox-custom::after {
   transform: translateX(16px);
   background: #ffffff;
+}
+
+/* focus visible support for inputs inside toggle-container */
+.toggle-container input:focus-visible + .checkbox-custom {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .viewer-actions {
@@ -513,6 +573,14 @@ input:checked + .checkbox-custom::after {
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   padding: 20px;
+  transition: var(--transition-smooth);
+}
+
+.template-card:hover {
+  border-color: rgba(99, 102, 241, 0.25);
+  background: rgba(15, 15, 20, 0.55);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
 }
 
 .template-card h3 {
@@ -631,6 +699,43 @@ input:checked + .checkbox-custom::after {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
   }
+}
+
+/* KPI Metric Cards with Interactive Hover state */
+.kpi-card {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: var(--transition-smooth);
+}
+
+.kpi-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Activity Log Item with Soft Transition hover */
+.activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  gap: 12px;
+  transition: var(--transition-smooth);
+}
+
+.activity-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 

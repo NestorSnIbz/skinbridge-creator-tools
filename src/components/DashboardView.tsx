@@ -90,15 +90,15 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
 
         {/* KPI Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.03)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="kpi-card">
             <span style={{ fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dash_stat_conversions')}</span>
             <span style={{ fontSize: '1.75rem', fontWeight: 800 }}>{stats.conversions}</span>
           </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.03)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="kpi-card">
             <span style={{ fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dash_stat_exports')}</span>
             <span style={{ fontSize: '1.75rem', fontWeight: 800 }}>{stats.exports}</span>
           </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.03)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="kpi-card">
             <span style={{ fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dash_stat_favorite')}</span>
             <span style={{ fontSize: '1.25rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {(() => {
@@ -107,7 +107,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
               })()}
             </span>
           </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.03)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="kpi-card">
             <span style={{ fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dash_stat_favorite_tool')}</span>
             <span style={{ fontSize: '1.1rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {stats.headUsage === 0 && stats.robloxUsage === 0
@@ -218,7 +218,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
               const timeStr = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
               return (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255, 255, 255, 0.01)', border: '1px solid rgba(255, 255, 255, 0.02)', borderRadius: '8px', gap: '12px' }}>
+                <div key={item.id} className="activity-item">
                   <div style={{ background: badgeBg, color: badgeText, padding: '6px 10px', borderRadius: '6px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
                     <span>{iconStr}</span>
                     <span>
