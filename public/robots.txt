@@ -4,3 +4,6 @@ Allow: /
 
 # Host
 Host: https://minecraft-to-roblox-clothing-exporter.vercel.app
+
+# Sitemap
+Sitemap: https://minecraft-to-roblox-clothing-exporter.vercel.app/sitemap.xml
