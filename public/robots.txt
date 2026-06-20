@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://minecraft-to-roblox-clothing-exporter-bner.vercel.app
+Host: https://minecraft-to-roblox-clothing-export.vercel.app
 
 # Sitemap
-Sitemap: https://minecraft-to-roblox-clothing-exporter-bner.vercel.app/sitemap.xml
+Sitemap: https://minecraft-to-roblox-clothing-export.vercel.app/sitemap.xml
