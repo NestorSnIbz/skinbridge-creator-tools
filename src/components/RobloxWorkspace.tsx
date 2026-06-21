@@ -9,7 +9,8 @@ import {
   exportRobloxPants, 
   drawRobloxPreview,
   generateRobloxShirtCanvas,
-  generateRobloxPantsCanvas
+  generateRobloxPantsCanvas,
+  isSlimSkin
 } from '../modules/RobloxClothingExporter';
 
 interface RobloxWorkspaceProps {
@@ -39,6 +40,7 @@ export default function RobloxWorkspace({
   const [robloxView, setRobloxView] = useState<'front' | 'back' | 'left' | 'right'>('front');
   const [showGrid, setShowGrid] = useState(true);
   const [autoRotate, setAutoRotate] = useState(false);
+  const [armType, setArmType] = useState<'classic' | 'slim'>('classic');
 
   const robloxContainerRef = useRef<HTMLDivElement | null>(null);
   const robloxViewerRef = useRef<ThreeViewer | null>(null);
@@ -46,6 +48,14 @@ export default function RobloxWorkspace({
   const robloxPantsCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fullShirtCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fullPantsCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Automatically detect arm type when a new skin is uploaded
+  useEffect(() => {
+    if (skinImage) {
+      const detectedIsSlim = isSlimSkin(skinImage);
+      setArmType(detectedIsSlim ? 'slim' : 'classic');
+    }
+  }, [skinImage]);
 
   // Initialize and update the 3D Roblox Avatar viewer
   useEffect(() => {
@@ -60,7 +70,7 @@ export default function RobloxWorkspace({
       robloxViewerRef.current.autoRotate = autoRotate;
       robloxViewerRef.current.setGridVisible(showGrid);
       if (skinImage) {
-        const avatarGroup = buildRobloxAvatar(skinImage);
+        const avatarGroup = buildRobloxAvatar(skinImage, armType === 'slim');
         robloxViewerRef.current.setHeadModel(avatarGroup);
       }
     }
@@ -70,7 +80,7 @@ export default function RobloxWorkspace({
         robloxViewerRef.current = null;
       }
     };
-  }, [skinImage, autoRotate, showGrid]);
+  }, [skinImage, autoRotate, showGrid, armType]);
 
   // Draw Roblox clothing previews
   useEffect(() => {
@@ -78,14 +88,14 @@ export default function RobloxWorkspace({
       const timer = setTimeout(() => {
         // Character assembly previews (on left sidebar)
         if (robloxShirtCanvasRef.current) {
-          drawRobloxPreview('shirt', robloxView, skinImage, robloxShirtCanvasRef.current);
+          drawRobloxPreview('shirt', robloxView, skinImage, robloxShirtCanvasRef.current, armType === 'slim');
         }
         if (robloxPantsCanvasRef.current) {
           drawRobloxPreview('pants', robloxView, skinImage, robloxPantsCanvasRef.current);
         }
         // Full templates (on right panel)
         if (fullShirtCanvasRef.current) {
-          const tempCanvas = generateRobloxShirtCanvas(skinImage);
+          const tempCanvas = generateRobloxShirtCanvas(skinImage, armType === 'slim');
           const ctx = fullShirtCanvasRef.current.getContext('2d');
           if (ctx) {
             fullShirtCanvasRef.current.width = 585;
@@ -107,7 +117,7 @@ export default function RobloxWorkspace({
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [robloxView, skinImage]);
+  }, [robloxView, skinImage, armType]);
 
   const handleExportRobloxShirt = async () => {
     if (!skinImage) {
@@ -116,7 +126,7 @@ export default function RobloxWorkspace({
     }
 
     try {
-      await exportRobloxShirt(skinImage);
+      await exportRobloxShirt(skinImage, armType === 'slim');
       showToast('success', t('toast_shirt_success'));
       logExport('Shirt', 'shirt.png');
     } catch (err: any) {
@@ -189,6 +199,24 @@ export default function RobloxWorkspace({
                   {view === 'front' ? t('view_front') : view === 'back' ? t('view_back') : view === 'left' ? t('view_left') : t('view_right')}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 style={{ margin: '0 0 6px 0', fontSize: '0.85rem', fontWeight: 600, color: '#a1a1aa' }}>{t('arm_type')}</h4>
+            <div className="tabs-container">
+              <button
+                className={`tab-btn ${armType === 'classic' ? 'active' : ''}`}
+                onClick={() => setArmType('classic')}
+              >
+                {t('arm_classic')}
+              </button>
+              <button
+                className={`tab-btn ${armType === 'slim' ? 'active' : ''}`}
+                onClick={() => setArmType('slim')}
+              >
+                {t('arm_slim')}
+              </button>
             </div>
           </div>
 

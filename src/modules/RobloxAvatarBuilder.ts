@@ -8,11 +8,11 @@ import {
  * Builds a 3D Roblox R6 Avatar dummy and applies the generated Shirt
  * and Pants textures onto its parts in real-time.
  */
-export function buildRobloxAvatar(skinImage: HTMLImageElement): THREE.Group {
+export function buildRobloxAvatar(skinImage: HTMLImageElement, isSlimOverride?: boolean): THREE.Group {
   const group = new THREE.Group();
   
   // 1. Generate the shirt and pants templates from the Minecraft skin
-  const shirtCanvas = generateRobloxShirtCanvas(skinImage);
+  const shirtCanvas = generateRobloxShirtCanvas(skinImage, isSlimOverride);
   const pantsCanvas = generateRobloxPantsCanvas(skinImage);
   
   // Helper to extract a face texture from a template canvas

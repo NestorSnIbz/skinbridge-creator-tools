@@ -60,6 +60,9 @@ export const translations: Record<Language, TranslationDictionary> = {
     btn_shirt: "Shirt",
     btn_pants: "Pants",
     btn_download_both: "Download Both",
+    arm_type: "Arm Type",
+    arm_classic: "Classic (4px)",
+    arm_slim: "Slim (3px)",
     
     // Right panel (3D Head viewer)
     opt_grid: "Grid",
@@ -156,6 +159,9 @@ export const translations: Record<Language, TranslationDictionary> = {
     btn_shirt: "Camisa",
     btn_pants: "Pantalón",
     btn_download_both: "Descargar Ambos",
+    arm_type: "Tipo de Brazos",
+    arm_classic: "Classic (4px)",
+    arm_slim: "Slim (3px)",
     
     // Right panel (3D Head viewer)
     opt_grid: "Rejilla",

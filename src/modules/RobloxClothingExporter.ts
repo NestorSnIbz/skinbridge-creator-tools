@@ -353,6 +353,18 @@ function detectIsSlimSkin(skinData: ImageData): boolean {
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /**
+ * Helper to detect if a Minecraft skin is Slim (Alex) format based on image pixels.
+ */
+export function isSlimSkin(skinImage: HTMLImageElement): boolean {
+  try {
+    const skinData = getSkinPixels(skinImage);
+    return detectIsSlimSkin(skinData);
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
  * Generates a Roblox Classic Shirt template (585×559) canvas from a Minecraft skin.
  * Contains: Torso (front, back, left, right, top, bottom) + Both Arms.
  * Does NOT include head or legs.
@@ -360,9 +372,9 @@ function detectIsSlimSkin(skinData: ImageData): boolean {
  * Composites base layer + overlay layer for pixel-perfect accuracy.
  * Automatically detects and handles Slim (3px) and Classic (4px) arm textures.
  */
-export function generateRobloxShirtCanvas(skinImage: HTMLImageElement): HTMLCanvasElement {
+export function generateRobloxShirtCanvas(skinImage: HTMLImageElement, isSlimOverride?: boolean): HTMLCanvasElement {
   const skinData = getSkinPixels(skinImage);
-  const isSlim = detectIsSlimSkin(skinData);
+  const isSlim = isSlimOverride !== undefined ? isSlimOverride : detectIsSlimSkin(skinData);
 
   const canvas = document.createElement('canvas');
   canvas.width = TEMPLATE_WIDTH;
@@ -439,8 +451,8 @@ export function generateRobloxPantsCanvas(skinImage: HTMLImageElement): HTMLCanv
 /**
  * Exports a Roblox Classic Shirt template (585×559) from a Minecraft skin.
  */
-export function exportRobloxShirt(skinImage: HTMLImageElement): Promise<void> {
-  const canvas = generateRobloxShirtCanvas(skinImage);
+export function exportRobloxShirt(skinImage: HTMLImageElement, isSlimOverride?: boolean): Promise<void> {
+  const canvas = generateRobloxShirtCanvas(skinImage, isSlimOverride);
   return downloadCanvasAsPNG(canvas, 'shirt.png');
 }
 
@@ -460,10 +472,11 @@ export function drawRobloxPreview(
   type: 'shirt' | 'pants',
   view: 'front' | 'back' | 'left' | 'right',
   skinImage: HTMLImageElement,
-  destCanvas: HTMLCanvasElement
+  destCanvas: HTMLCanvasElement,
+  isSlimOverride?: boolean
 ) {
   const templateCanvas = type === 'shirt'
-    ? generateRobloxShirtCanvas(skinImage)
+    ? generateRobloxShirtCanvas(skinImage, isSlimOverride)
     : generateRobloxPantsCanvas(skinImage);
 
   const destCtx = destCanvas.getContext('2d');

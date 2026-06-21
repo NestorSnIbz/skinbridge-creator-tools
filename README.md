@@ -1,83 +1,83 @@
 # SkinBridge 🚀
 
-**SkinBridge** es una plataforma web interactiva premium diseñada para creadores. Te permite transformar tus skins de Minecraft (64x64 px) en modelos 3D listos para software de edición (Blender, Blockbench) y en plantillas de ropa oficiales de **Roblox Classic** (Shirt y Pants) con previsualización tridimensional en tiempo real.
+**SkinBridge** is a premium interactive web platform designed for creators. It allows you to transform Minecraft skins (64x64 px) into 3D models ready for editing software (such as Blender or Blockbench) and official **Roblox Classic** clothing templates (Shirt and Pants) with real-time 3D preview.
 
-🔗 **Sitio web oficial:** [https://minecraft-to-roblox-clothing-export.vercel.app/](https://minecraft-to-roblox-clothing-export.vercel.app/)
-
----
-
-## 🌟 Características Principales
-
-### 1. Panel de Control & Estadísticas (SaaS Dashboard)
-* **Punto de Entrada Centralizado:** La aplicación ofrece un panel moderno que permite explorar las herramientas disponibles y ver tendencias de uso.
-* **Métricas y Analíticas en Tiempo Real:** Realiza un seguimiento de las conversiones de skins, archivos exportados, tu formato favorito y la herramienta más utilizada.
-* **Gráficos Dinámicos:** Gráfico circular SVG interactivo que muestra la distribución de uso de las herramientas y un gráfico de barras horizontales para el formato de exportación más popular.
-* **Historial de Actividad Reciente:** Registra cronológicamente tus últimas 5 acciones (cargas, visitas y exportaciones) con formato de tiempo relativo.
-* **Persistencia:** Todos tus datos analíticos e historial se guardan automáticamente en `localStorage`.
-
-### 2. Módulo: Modelo Cabeza 3D (`head3d`)
-Convierte la cabeza de tu skin de Minecraft en un modelo 3D con volumen por capas (Capa Base + Capa Sombrero/Exterior).
-* **Visor 3D Interactivo:** Explora la cabeza en un entorno virtual oscuro con rotación orbital de 360°, zoom libre, rejilla de ayuda y auto-rotación.
-* **Desglose de Caras:** Grid 2D con las 12 caras de la cabeza recortadas dinámicamente según las coordenadas oficiales de Minecraft.
-* **Exportadores Soportados:**
-  * **GLB:** Descarga el modelo 3D como archivo binario `.glb` compatible con Blender, Unity o Unreal Engine.
-  * **BBMODEL (Blockbench):** Exporta el modelo estructurado en carpetas jerárquicas con cubos nativos editables y texturas incrustadas.
-  * *Nota: Las exportaciones a OBJ y FBX se encuentran desactivadas temporalmente en esta versión.*
-
-### 3. Módulo: Plantillas Ropa Roblox (`roblox`)
-Convierte el torso, los brazos y las piernas de tu skin de Minecraft en plantillas de ropa clásicas oficiales de Roblox (585x559 px).
-* **Autodetección de Formato (Steve vs. Alex):** Identifica automáticamente si la skin subida utiliza el formato Classic (brazos de 4px) o el formato Slim/Alex (brazos de 3px), adaptando el remapeado UV en tiempo real.
-* **Visualizador 3D de Avatar Roblox (Dummy R6):** Un visor 3D interactivo de cuerpo completo que aplica en tiempo real las texturas de la camisa (`shirt.png`) y del pantalón (`pants.png`) generadas sobre un maniquí R6 de Roblox, con controles orbitales y un botón para restaurar la cámara a la vista frontal por defecto.
-* **Remapeado UV Anatómico Correcto:** Mapea las texturas de la skin (torso, brazos y piernas) a las posiciones oficiales R15 de las plantillas clásicas de Roblox, con costados de extremidades y torso corregidos para evitar inversiones visuales.
-* **Previsualización de Avatar en 2D:** Panel izquierdo que ensambla la ropa en un canvas superior e inferior con selector de vista interactivo (**Frente**, **Espalda**, **Izquierda**, **Derecha**).
-* **Escalado Pixel-Perfect:** Utiliza un algoritmo de vecino más cercano (Nearest-Neighbor) para mantener la nitidez del pixel art original en los templates y visores 3D.
-* **Descarga Rápida:** Descarga los templates individuales o ambos secuencialmente con un solo clic.
-
-### 4. Soporte Multilingüe (i18n)
-* **Detección Automática:** Detecta automáticamente el idioma de tu navegador y establece el español (`es`) o el inglés (`en`, por defecto) correspondientes.
-* **Cambio Dinámico:** Selector visual en el header de la aplicación que traduce toda la interfaz en tiempo real sin necesidad de recargar la página.
-* **Persistencia:** Almacena la preferencia de idioma en el navegador.
-
-### 5. Columnas de Anuncios Horizontales/Laterales (Responsivo)
-* **Banners de Patrocinadores (160x600 px):** Integra columnas de anuncios tipo "Wide Skyscraper" a los costados de la aplicación diseñados con la estética de vidrio esmerilado del sistema.
-* **Diseño No Intrusivo:** Los anuncios se ocultan automáticamente mediante consultas CSS `@media` en resoluciones inferiores a `1600px` para asegurar la total usabilidad de los visores 3D y áreas de trabajo en portátiles y móviles.
-* **Interactivos:** Cuenta con un botón de cierre que oculta el anuncio permanentemente durante la sesión.
+🔗 **Official Website:** [https://minecraft-to-roblox-clothing-export.vercel.app/](https://minecraft-to-roblox-clothing-export.vercel.app/)
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## 🌟 Key Features
+
+### 1. Control Panel & Analytics (SaaS Dashboard)
+* **Centralized Entry Point:** A modern dashboard to explore available workspaces and monitor usage trends.
+* **Real-Time Metrics & Analytics:** Track skin conversions, exported files, your favorite format, and your most-used workspace.
+* **Dynamic Charts:** Interactive SVG pie chart displaying workspace distribution, and a horizontal bar chart showing the most popular export formats.
+* **Recent Activity Log:** Chronological list of your last 5 actions (uploads, visits, and exports) with relative timestamps.
+* **Data Persistence:** All analytics and activity logs are automatically persisted locally via `localStorage`.
+
+### 2. 3D Head Model Workspace (`head3d`)
+Convert your Minecraft skin's head into a 3D blocky model with layered volume support (Base Layer + Hat/Outer Layer).
+* **Interactive 3D Viewer:** Inspect the model in a sleek dark environment with 360° orbital rotation, smooth zooming, helper grid, and auto-rotation.
+* **Face Breakdown:** A 2D grid featuring all 12 head faces cropped in real-time according to official Minecraft skin coordinates.
+* **Supported Export Formats:**
+  * **GLB:** Download the 3D model as a `.glb` binary file compatible with Blender, Unity, or Unreal Engine.
+  * **BBMODEL (Blockbench):** Export a structured model file with hierarchical folders, native editable cubes, and embedded textures.
+  * **OBJ:** Export as a wave-front `.obj` file along with its `.mtl` material file and `textura.png`.
+  * **FBX:** Export as a `.fbx` model file with embedded materials.
+
+### 3. Roblox Classic Clothing Converter (`roblox`)
+Convert the torso, arms, and legs of your Minecraft skin into official Roblox Classic clothing templates (585x559 px).
+* **Arm Type Selector (Steve vs. Alex):** Automatically detects if the skin format is Classic (4px arms) or Slim (3px arms), and provides manual toggle buttons to easily correct any auto-detection mistakes in real-time.
+* **3D Roblox Avatar Preview (R6 Dummy):** Full-body interactive 3D viewer that applies the generated shirt (`shirt.png`) and pants (`pants.png`) textures onto a Roblox R6 rig. Includes orbital camera controls and a quick-reset button to return to the frontal camera view.
+* **Anatomically Correct UV Remapping:** Maps Minecraft skin coordinates (torso, arms, legs) to official Roblox classic clothing templates, ensuring all limbs and sides are correctly oriented to prevent textures from rendering backwards or upside-down.
+* **2D Avatar View Assembly:** Sidebar previews showing the clothing assembled on a 2D dummy from four distinct view angles (**Front**, **Back**, **Left**, **Right**).
+* **Pixel-Perfect Scaling:** Employs nearest-neighbor scaling to maintain the sharpness of the original pixel art on both templates and 3D viewers.
+* **Quick Downloads:** Single-click buttons to download templates individually or both sequentially.
+
+### 4. Multilingual Support (i18n)
+* **Automatic Detection:** Automatically detects your browser's language, setting English (`en`, default) or Spanish (`es`) accordingly.
+* **Dynamic Language Switcher:** A header selector allows you to translate the entire UI in real-time without reloading the page.
+* **Preferences Storage:** Remembers your language preference across browser sessions.
+
+### 5. Responsive Ad Banners
+* **Sponsor Banner Columns (160x600 px):** Integrates "Wide Skyscraper" sponsor panels on the sides of the viewport, styled to match the frosted glass aesthetic of the app.
+* **Non-Intrusive Design:** Sidebar banners hide automatically using CSS media queries (`@media`) on screen widths below `1600px` to maximize space for 3D viewports on laptops and mobile devices.
+* **Session-Dismissible:** Banners feature a close button to permanently hide them during your session.
+
+---
+
+## 🛠️ Technology Stack
 
 * **Framework:** React 19 + TypeScript + Vite
-* **Gráficos 3D:** Three.js con OrbitControls y GLTFExporter
-* **Iconografía:** Lucide React
-* **Estilos:** Vanilla CSS con gradientes dinámicos y Glassmorphism
-* **Manipulación de Imagen:** Canvas 2D API para recorte y escalado de píxeles
-* **Optimización de Bundle:** Code Splitting con `React.lazy` y `Suspense`, logrando reducir el tamaño inicial del empaquetador de la aplicación en un **80%** (de 1.12 MB a **225 kB**).
+* **3D Graphics:** Three.js with OrbitControls, OBJExporter, GLTFExporter, and FBXExporter integrations
+* **Iconography:** Lucide React
+* **Styling:** Vanilla CSS with dynamic gradients and Glassmorphism
+* **Image Processing:** 2D Canvas API for real-time pixel cropping and nearest-neighbor scaling
+* **Bundle Optimization:** Code Splitting using `React.lazy` and `Suspense` to reduce the initial bundle footprint by **80%** (from 1.12 MB down to **225 kB**).
 
 ---
 
-## 💻 Instalación y Ejecución Local
+## 💻 Local Installation and Development
 
-1. **Clonar el repositorio:**
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/NestorSnIbz/minecraft-to-roblox-clothing-exporter.git
    cd minecraft-to-roblox-clothing-exporter
    ```
 
-2. **Instalar dependencias:**
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. **Ejecutar servidor de desarrollo:**
+3. **Start the development server:**
    ```bash
    npm run dev
    ```
-   Abre tu navegador en `http://localhost:5173`.
+   Open your browser and navigate to `http://localhost:5173`.
 
-4. **Compilar para producción:**
+4. **Build for production:**
    ```bash
    npm run build
    ```
-   Esto generará el paquete optimizado y dividido en chunks bajo demanda dentro de la carpeta `dist/`.
-
+   This compiles the project and generates optimized assets split into chunks on-demand inside the `dist/` directory.
