@@ -40,13 +40,13 @@ function setFaceUVs(
   if (faceIndex === 2) {
     // Top face: aligned to BBModel export [16, 8, 8, 0] / [48, 8, 40, 0]
     // Vertex 0 (Top-Left of face: back-left)
-    uvAttribute.setXY(startIdx, uMax, vMin);
+    uvAttribute.setXY(startIdx, uMin, vMax);
     // Vertex 1 (Top-Right of face: back-right)
-    uvAttribute.setXY(startIdx + 1, uMin, vMin);
+    uvAttribute.setXY(startIdx + 1, uMax, vMax);
     // Vertex 2 (Bottom-Left of face: front-left)
-    uvAttribute.setXY(startIdx + 2, uMax, vMax);
+    uvAttribute.setXY(startIdx + 2, uMin, vMin);
     // Vertex 3 (Bottom-Right of face: front-right)
-    uvAttribute.setXY(startIdx + 3, uMin, vMax);
+    uvAttribute.setXY(startIdx + 3, uMax, vMin);
   } else if (faceIndex === 3) {
     // Bottom face: vertically flipped AND horizontally mirrored to match standard Minecraft skin layout orientation
     // Vertex 0 (Top-Left of face: bottom-left-front)
