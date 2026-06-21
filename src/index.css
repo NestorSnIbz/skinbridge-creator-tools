@@ -776,4 +776,31 @@ input:checked + .checkbox-custom::after {
   color: #a78bfa !important; /* Muted Portal Violet */
 }
 
+/* Skin Editor Workspace Grid and helper styling */
+.skin-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
+@media (min-width: 1200px) {
+  .skin-editor-grid {
+    grid-template-columns: 260px 540px 1fr;
+  }
+}
+
+@media (max-width: 1199px) and (min-width: 800px) {
+  .skin-editor-grid {
+    grid-template-columns: 260px 1fr;
+  }
+}
+
+.active-editor-tool {
+  background: var(--primary) !important;
+  border-color: var(--primary-hover) !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px var(--primary-glow) !important;
+}
+
 

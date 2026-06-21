@@ -15,6 +15,7 @@ import {
 
 interface RobloxWorkspaceProps {
   skinImage: HTMLImageElement | null;
+  setSkinImage?: React.Dispatch<React.SetStateAction<HTMLImageElement | null>>;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   dragActive: boolean;
@@ -71,6 +72,11 @@ export default function RobloxWorkspace({
       robloxViewerRef.current.setGridVisible(showGrid);
       if (skinImage) {
         const avatarGroup = buildRobloxAvatar(skinImage, armType === 'slim');
+        avatarGroup.traverse((child) => {
+          if (child instanceof THREE.Mesh && child.userData?.meshName === 'head') {
+            child.visible = false;
+          }
+        });
         robloxViewerRef.current.setHeadModel(avatarGroup);
       }
     }

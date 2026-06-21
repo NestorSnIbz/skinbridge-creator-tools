@@ -10,6 +10,9 @@ export class ThreeViewer {
   private gridHelper!: THREE.GridHelper;
   private headGroup: THREE.Group | null = null;
   private animationFrameId: number | null = null;
+  private paintCallback: ((meshName: string, materialIndex: number, uv: THREE.Vector2) => void) | null = null;
+  private paintEndCallback: (() => void) | null = null;
+  private isPainting3D = false;
 
   // Options
   public autoRotate = false;
@@ -134,6 +137,21 @@ export class ThreeViewer {
   }
 
   /**
+   * Sets the visibility of a specific body part mesh.
+   */
+  public setPartVisibility(partName: string, visible: boolean) {
+    if (!this.headGroup) return;
+    this.headGroup.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const name = child.userData?.meshName || child.name;
+        if (name === partName) {
+          child.visible = visible;
+        }
+      }
+    });
+  }
+
+  /**
    * Triggers a render frame manually.
    */
   public renderOnce() {
@@ -190,9 +208,91 @@ export class ThreeViewer {
   }
 
   /**
+   * Enable interactive 3D painting mode.
+   */
+  public enablePainting(
+    onPaint: (meshName: string, materialIndex: number, uv: THREE.Vector2) => void,
+    onPaintEnd: () => void
+  ) {
+    this.paintCallback = onPaint;
+    this.paintEndCallback = onPaintEnd;
+    this.renderer.domElement.addEventListener('mousedown', this.handleMouseDownPaint);
+    this.renderer.domElement.addEventListener('mousemove', this.handleMouseMovePaint);
+    window.addEventListener('mouseup', this.handleMouseUpPaint);
+  }
+
+  /**
+   * Disable interactive 3D painting mode.
+   */
+  public disablePainting() {
+    this.paintCallback = null;
+    this.paintEndCallback = null;
+    if (this.renderer && this.renderer.domElement) {
+      this.renderer.domElement.removeEventListener('mousedown', this.handleMouseDownPaint);
+      this.renderer.domElement.removeEventListener('mousemove', this.handleMouseMovePaint);
+    }
+    window.removeEventListener('mouseup', this.handleMouseUpPaint);
+    this.controls.enabled = true;
+    this.isPainting3D = false;
+  }
+
+  private handleMouseDownPaint = (e: MouseEvent) => {
+    if (e.button !== 0 || !this.paintCallback) return;
+    const intersect = this.getPaintIntersection(e);
+    if (intersect && intersect.face) {
+      this.controls.enabled = false;
+      this.isPainting3D = true;
+      this.triggerPaintCallback(intersect);
+    }
+  };
+
+  private handleMouseMovePaint = (e: MouseEvent) => {
+    if (!this.isPainting3D || !this.paintCallback) return;
+    const intersect = this.getPaintIntersection(e);
+    if (intersect && intersect.face) {
+      this.triggerPaintCallback(intersect);
+    }
+  };
+
+  private handleMouseUpPaint = () => {
+    if (this.isPainting3D) {
+      this.controls.enabled = true;
+      this.isPainting3D = false;
+      if (this.paintEndCallback) {
+        this.paintEndCallback();
+      }
+    }
+  };
+
+  private getPaintIntersection(e: MouseEvent) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, this.camera);
+    if (!this.headGroup) return null;
+    const intersects = raycaster.intersectObjects(this.headGroup.children, true);
+    return intersects.length > 0 ? intersects[0] : null;
+  }
+
+  private triggerPaintCallback(intersect: any) {
+    if (!this.paintCallback) return;
+    const mesh = intersect.object;
+    const materialIndex = intersect.face?.materialIndex;
+    const uv = intersect.uv;
+    const meshName = mesh.userData?.meshName || mesh.name;
+    if (meshName && materialIndex !== undefined && uv) {
+      this.paintCallback(meshName, materialIndex, uv);
+    }
+  }
+
+  /**
    * Destroy the viewer, clean up all listeners and webgl context.
    */
   public destroy() {
+    this.disablePainting();
     window.removeEventListener('resize', this.handleResize);
 
     if (this.animationFrameId !== null) {
