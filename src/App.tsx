@@ -366,6 +366,7 @@ function AppContent() {
           {activeModule === 'roblox' && (
             <RobloxWorkspace 
               skinImage={skinImage}
+              setSkinImage={setSkinImage}
               fileInputRef={fileInputRef}
               handleFileChange={handleFileChange}
               dragActive={dragActive}

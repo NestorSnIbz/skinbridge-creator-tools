@@ -105,6 +105,26 @@ export const translations: Record<Language, TranslationDictionary> = {
     ad_advertisement: "Advertisement",
     ad_sponsor_title: "Premium Sponsor",
     ad_sponsor_desc: "Support our free creator tools. Click here to sponsor us!",
+
+    // Skin Editor
+    mode_export: "Export Templates",
+    mode_editor: "Skin Editor",
+    confirm_clear_layer: "Are you sure you want to clear the selected layer?",
+    editor_tools: "Tools",
+    tool_pencil: "Pencil",
+    tool_eraser: "Eraser",
+    tool_fill: "Fill",
+    tool_picker: "Picker",
+    editor_history: "History",
+    editor_layer: "Active Layer",
+    editor_color: "Color",
+    editor_options: "Options",
+    editor_mirror: "Face Symmetry",
+    editor_guides: "Body Guides",
+    editor_grid: "Grid",
+    editor_clear: "Clear Layer",
+    editing_part: "Editing",
+    hover_to_identify: "Hover over the canvas to identify the body part",
   },
   es: {
     // Header
@@ -204,6 +224,26 @@ export const translations: Record<Language, TranslationDictionary> = {
     ad_advertisement: "Publicidad",
     ad_sponsor_title: "Patrocinador Premium",
     ad_sponsor_desc: "Apoya nuestras herramientas gratuitas. ¡Haz clic para patrocinarnos!",
+
+    // Skin Editor
+    mode_export: "Exportar Plantillas",
+    mode_editor: "Editor de Skin",
+    confirm_clear_layer: "¿Estás seguro de que deseas limpiar la capa seleccionada?",
+    editor_tools: "Herramientas",
+    tool_pencil: "Lápiz",
+    tool_eraser: "Borrador",
+    tool_fill: "Cubo",
+    tool_picker: "Gotero",
+    editor_history: "Historial",
+    editor_layer: "Capa Activa",
+    editor_color: "Color",
+    editor_options: "Opciones",
+    editor_mirror: "Simetría de Cara",
+    editor_guides: "Guías de Cuerpo",
+    editor_grid: "Cuadrícula",
+    editor_clear: "Limpiar Capa",
+    editing_part: "Editando",
+    hover_to_identify: "Pasa el mouse sobre el lienzo para identificar la parte del cuerpo",
   }
 };
 

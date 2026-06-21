@@ -206,7 +206,7 @@ const TEMPLATE_HEIGHT = 559;
 /**
  * Extract pixel data from the Minecraft skin image.
  */
-function getSkinPixels(skinImage: HTMLImageElement): ImageData {
+function getSkinPixels(skinImage: HTMLImageElement | HTMLCanvasElement): ImageData {
   const canvas = document.createElement('canvas');
   canvas.width = 64;
   canvas.height = 64;
@@ -354,7 +354,7 @@ function detectIsSlimSkin(skinData: ImageData): boolean {
 /**
  * Helper to detect if a Minecraft skin is Slim (Alex) format based on image pixels.
  */
-export function isSlimSkin(skinImage: HTMLImageElement): boolean {
+export function isSlimSkin(skinImage: HTMLImageElement | HTMLCanvasElement): boolean {
   try {
     const skinData = getSkinPixels(skinImage);
     return detectIsSlimSkin(skinData);
@@ -371,7 +371,7 @@ export function isSlimSkin(skinImage: HTMLImageElement): boolean {
  * Composites base layer + overlay layer for pixel-perfect accuracy.
  * Automatically detects and handles Slim (3px) and Classic (4px) arm textures.
  */
-export function generateRobloxShirtCanvas(skinImage: HTMLImageElement, isSlimOverride?: boolean): HTMLCanvasElement {
+export function generateRobloxShirtCanvas(skinImage: HTMLImageElement | HTMLCanvasElement, isSlimOverride?: boolean): HTMLCanvasElement {
   const skinData = getSkinPixels(skinImage);
   const isSlim = isSlimOverride !== undefined ? isSlimOverride : detectIsSlimSkin(skinData);
 
@@ -416,7 +416,7 @@ export function generateRobloxShirtCanvas(skinImage: HTMLImageElement, isSlimOve
  * 
  * Composites base layer + overlay layer for pixel-perfect accuracy.
  */
-export function generateRobloxPantsCanvas(skinImage: HTMLImageElement): HTMLCanvasElement {
+export function generateRobloxPantsCanvas(skinImage: HTMLImageElement | HTMLCanvasElement): HTMLCanvasElement {
   const skinData = getSkinPixels(skinImage);
 
   const canvas = document.createElement('canvas');
@@ -450,7 +450,7 @@ export function generateRobloxPantsCanvas(skinImage: HTMLImageElement): HTMLCanv
 /**
  * Exports a Roblox Classic Shirt template (585×559) from a Minecraft skin.
  */
-export function exportRobloxShirt(skinImage: HTMLImageElement, isSlimOverride?: boolean): Promise<void> {
+export function exportRobloxShirt(skinImage: HTMLImageElement | HTMLCanvasElement, isSlimOverride?: boolean): Promise<void> {
   const canvas = generateRobloxShirtCanvas(skinImage, isSlimOverride);
   return downloadCanvasAsPNG(canvas, 'shirt.png');
 }
@@ -458,7 +458,7 @@ export function exportRobloxShirt(skinImage: HTMLImageElement, isSlimOverride?: 
 /**
  * Exports a Roblox Classic Pants template (585×559) from a Minecraft skin.
  */
-export function exportRobloxPants(skinImage: HTMLImageElement): Promise<void> {
+export function exportRobloxPants(skinImage: HTMLImageElement | HTMLCanvasElement): Promise<void> {
   const canvas = generateRobloxPantsCanvas(skinImage);
   return downloadCanvasAsPNG(canvas, 'pants.png');
 }
@@ -470,7 +470,7 @@ export function exportRobloxPants(skinImage: HTMLImageElement): Promise<void> {
 export function drawRobloxPreview(
   type: 'shirt' | 'pants',
   view: 'front' | 'back' | 'left' | 'right',
-  skinImage: HTMLImageElement,
+  skinImage: HTMLImageElement | HTMLCanvasElement,
   destCanvas: HTMLCanvasElement,
   isSlimOverride?: boolean
 ) {
