@@ -288,17 +288,11 @@ function buildBaseHead(skinImage: HTMLImageElement): THREE.Group {
           const vMin = (64 - (py + 1)) / 64;
           const vMax = (64 - py) / 64;
 
-          // Apply UV shrinking (insetting) to prevent color bleeding between adjacent pixels
-          const uSize = uMax - uMin;
-          const vSize = vMax - vMin;
-          const inset = 0.08; // 8% border inset
+          // Map the entire quad to the exact center of the pixel to completely eliminate bilinear bleeding (orange lines)
+          const uCenter = (uMin + uMax) / 2;
+          const vCenter = (vMin + vMax) / 2;
 
-          const uMinInset = uMin + inset * uSize;
-          const uMaxInset = uMax - inset * uSize;
-          const vMinInset = vMin + inset * vSize;
-          const vMaxInset = vMax - inset * vSize;
-
-          const geom = buildPlaneGeometry(pixelSize, pixelSize, uMinInset, uMaxInset, vMinInset, vMaxInset);
+          const geom = buildPlaneGeometry(pixelSize, pixelSize, uCenter, uCenter, vCenter, vCenter);
           
           // Apply rotation
           face.applyRotation(geom);
@@ -441,17 +435,11 @@ function buildVoxelizedOverlay(skinImage: HTMLImageElement): THREE.Group {
           const vMin = (64 - (py + 1)) / 64;
           const vMax = (64 - py) / 64;
 
-          // Apply UV shrinking (insetting) to prevent color bleeding between adjacent pixels
-          const uSize = uMax - uMin;
-          const vSize = vMax - vMin;
-          const inset = 0.08; // 8% border inset
+          // Map the entire quad to the exact center of the pixel to completely eliminate bilinear bleeding (orange lines)
+          const uCenter = (uMin + uMax) / 2;
+          const vCenter = (vMin + vMax) / 2;
 
-          const uMinInset = uMin + inset * uSize;
-          const uMaxInset = uMax - inset * uSize;
-          const vMinInset = vMin + inset * vSize;
-          const vMaxInset = vMax - inset * vSize;
-
-          const geom = buildPlaneGeometry(pixelSize, pixelSize, uMinInset, uMaxInset, vMinInset, vMaxInset);
+          const geom = buildPlaneGeometry(pixelSize, pixelSize, uCenter, uCenter, vCenter, vCenter);
           
           // Apply rotation
           face.applyRotation(geom);
