@@ -91,15 +91,15 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
         {/* KPI Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
           <div className="kpi-card">
-            <span style={{ fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dash_stat_conversions')}</span>
+            <span className="voxel-caption">{t('dash_stat_conversions')}</span>
             <span style={{ fontSize: '1.75rem', fontWeight: 800 }}>{stats.conversions}</span>
           </div>
           <div className="kpi-card">
-            <span style={{ fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dash_stat_exports')}</span>
+            <span className="voxel-caption">{t('dash_stat_exports')}</span>
             <span style={{ fontSize: '1.75rem', fontWeight: 800 }}>{stats.exports}</span>
           </div>
           <div className="kpi-card">
-            <span style={{ fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dash_stat_favorite')}</span>
+            <span className="voxel-caption">{t('dash_stat_favorite')}</span>
             <span style={{ fontSize: '1.25rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {(() => {
                 const sorted = Object.entries(stats.formats).sort((a, b) => b[1] - a[1]);
@@ -108,7 +108,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
             </span>
           </div>
           <div className="kpi-card">
-            <span style={{ fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('dash_stat_favorite_tool')}</span>
+            <span className="voxel-caption">{t('dash_stat_favorite_tool')}</span>
             <span style={{ fontSize: '1.1rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {stats.headUsage === 0 && stats.robloxUsage === 0
                 ? 'N/A'

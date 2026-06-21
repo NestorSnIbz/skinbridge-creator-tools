@@ -7,38 +7,42 @@
 
   color-scheme: dark;
   color: #e4e4e7;
-  background-color: #09090b;
+  background-color: #08070b; /* Obsidian Deep background */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Premium Design System Variables */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-glow: rgba(99, 102, 241, 0.4);
-  --roblox-red: #ff4747;
-  --roblox-red-hover: #d91414;
-  --roblox-red-glow: rgba(217, 20, 20, 0.4);
+  /* Obsidian Voxel Lab Theme Design Tokens */
+  --primary: #7c3aed; /* Nether Portal Violet */
+  --primary-hover: #6d28d9;
+  --primary-glow: rgba(124, 58, 237, 0.4);
+  --roblox-red: #ef4444; /* Roblox Brand Crimson */
+  --roblox-red-hover: #dc2626;
+  --roblox-red-glow: rgba(239, 68, 68, 0.4);
   
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-smooth: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --transition-bounce: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   
-  --glass-bg: rgba(15, 15, 20, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(99, 102, 241, 0.25);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-bg: rgba(8, 7, 11, 0.75); /* Bedrock Dark obsidian fill */
+  --glass-border: #1e1b4b; /* Voxel portal-indigo frame border */
+  --glass-border-hover: #7c3aed;
+  
+  /* 3D Voxel Plate Shadow offset */
+  --voxel-shadow: 0px 4px 0px 0px #1e1b4b;
+  --voxel-shadow-hover: 0px 6px 0px 0px #7c3aed;
+  --voxel-shadow-active: 0px 0px 0px 0px transparent;
 
   /* Native CSS Scrollbar (Firefox support) */
-  scrollbar-color: #27272a #09090b;
+  scrollbar-color: #27272a #08070b;
   scrollbar-width: thin;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #09090b 70%);
+  background: radial-gradient(circle at 50% 0%, #161030 0%, #08070b 80%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
@@ -69,7 +73,7 @@ p, li, blockquote {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #08070b;
 }
 ::-webkit-scrollbar-thumb {
   background: #27272a;
@@ -80,20 +84,22 @@ p, li, blockquote {
   background: var(--primary);
 }
 
-/* Premium Layout & Glassmorphism Utilities */
+/* Premium Layout & Glassmorphism Utilities with 3D blocky physical presence */
 .glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid var(--glass-border);
+  border-radius: 8px; /* Blocky voxel-like corners */
+  box-shadow: var(--voxel-shadow);
   transition: var(--transition-smooth);
+  transform: translateY(-2px);
 }
 
 .glass-panel:hover {
   border-color: var(--glass-border-hover);
-  box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.05);
+  box-shadow: var(--voxel-shadow-hover);
+  transform: translateY(-4px);
 }
 
 .glow-btn {
@@ -101,53 +107,64 @@ p, li, blockquote {
   overflow: hidden;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: white;
-  border: none;
-  padding: 12px 24px;
-  font-weight: 600;
-  border-radius: 12px;
+  border: 2px solid var(--glass-border);
+  padding: 10px 22px;
+  font-weight: 800;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 14px 0 var(--primary-glow);
+  box-shadow: var(--voxel-shadow);
+  transform: translateY(-2px);
   transition: var(--transition-smooth);
 }
 
 .glow-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.6);
-  filter: brightness(1.1);
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: var(--voxel-shadow-hover);
 }
 
 .glow-btn:active {
-  transform: translateY(0);
+  transform: translateY(2px);
+  box-shadow: var(--voxel-shadow-active);
 }
 
 .glow-btn-secondary {
   background: rgba(39, 39, 42, 0.6);
   backdrop-filter: blur(8px);
   color: #f4f4f5;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 12px 24px;
-  font-weight: 600;
-  border-radius: 12px;
+  border: 2px solid var(--glass-border);
+  padding: 10px 22px;
+  font-weight: 800;
+  font-family: inherit;
+  text-transform: uppercase;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: var(--voxel-shadow);
+  transform: translateY(-2px);
   transition: var(--transition-smooth);
 }
 
 .glow-btn-secondary:hover {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: #f4f4f5;
   background: rgba(63, 63, 70, 0.8);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0px 6px 0px 0px #f4f4f5;
 }
 
 .glow-btn-secondary:active {
-  transform: translateY(0);
+  transform: translateY(2px);
+  box-shadow: var(--voxel-shadow-active);
 }
 
 .glow-btn-roblox {
@@ -155,27 +172,31 @@ p, li, blockquote {
   overflow: hidden;
   background: linear-gradient(135deg, var(--roblox-red) 0%, var(--roblox-red-hover) 100%);
   color: white;
-  border: none;
-  padding: 12px 20px;
-  font-weight: 600;
-  border-radius: 12px;
+  border: 2px solid var(--glass-border);
+  padding: 10px 18px;
+  font-weight: 800;
+  font-family: inherit;
+  text-transform: uppercase;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 14px 0 var(--roblox-red-glow);
+  box-shadow: var(--voxel-shadow);
+  transform: translateY(-2px);
   transition: var(--transition-smooth);
 }
 
 .glow-btn-roblox:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px 0 rgba(217, 20, 20, 0.6);
-  filter: brightness(1.1);
+  border-color: var(--roblox-red);
+  transform: translateY(-4px);
+  box-shadow: 0px 6px 0px 0px var(--roblox-red);
 }
 
 .glow-btn-roblox:active {
-  transform: translateY(0);
+  transform: translateY(2px);
+  box-shadow: var(--voxel-shadow-active);
 }
 
 
@@ -359,16 +380,20 @@ p, li, blockquote {
 }
 
 .face-label {
-  font-size: 0.7rem;
-  color: #a1a1aa;
+  font-family: ui-monospace, SFMono-Regular, SF Pro Mono, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  color: #f4f4f5;
   text-align: center;
-  font-weight: 500;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .face-coords {
-  font-size: 0.6rem;
-  color: #71717a;
-  font-family: monospace;
+  font-size: 0.62rem;
+  color: #a78bfa; /* Muted Portal Violet */
+  font-family: ui-monospace, SFMono-Regular, SF Pro Mono, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
 }
 
 /* 3D Viewer Panel styling */
@@ -739,6 +764,16 @@ input:checked + .checkbox-custom::after {
 .activity-item:hover {
   background: rgba(255, 255, 255, 0.02);
   border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Voxel Monospace Terminal Caption for accessibility and styling */
+.voxel-caption {
+  font-family: ui-monospace, SFMono-Regular, SF Pro Mono, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight: 700;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a78bfa !important; /* Muted Portal Violet */
 }
 
 
