@@ -36,15 +36,27 @@ function setFaceUVs(
   const vMax = (textureSize - coords.y) / textureSize;
 
   const startIdx = faceIndex * 4;
-
-  // Vertex 0 (Top-Left of face)
-  uvAttribute.setXY(startIdx, uMin, vMax);
-  // Vertex 1 (Top-Right of face)
-  uvAttribute.setXY(startIdx + 1, uMax, vMax);
-  // Vertex 2 (Bottom-Left of face)
-  uvAttribute.setXY(startIdx + 2, uMin, vMin);
-  // Vertex 3 (Bottom-Right of face)
-  uvAttribute.setXY(startIdx + 3, uMax, vMin);
+  
+  if (faceIndex === 3) {
+    // Vertically flip bottom face for correct Minecraft skin orientation
+    // Vertex 0 (Top-Left of face)
+    uvAttribute.setXY(startIdx, uMin, vMin);
+    // Vertex 1 (Top-Right of face)
+    uvAttribute.setXY(startIdx + 1, uMax, vMin);
+    // Vertex 2 (Bottom-Left of face)
+    uvAttribute.setXY(startIdx + 2, uMin, vMax);
+    // Vertex 3 (Bottom-Right of face)
+    uvAttribute.setXY(startIdx + 3, uMax, vMax);
+  } else {
+    // Vertex 0 (Top-Left of face)
+    uvAttribute.setXY(startIdx, uMin, vMax);
+    // Vertex 1 (Top-Right of face)
+    uvAttribute.setXY(startIdx + 1, uMax, vMax);
+    // Vertex 2 (Bottom-Left of face)
+    uvAttribute.setXY(startIdx + 2, uMin, vMin);
+    // Vertex 3 (Bottom-Right of face)
+    uvAttribute.setXY(startIdx + 3, uMax, vMin);
+  }
 }
 
 /**
