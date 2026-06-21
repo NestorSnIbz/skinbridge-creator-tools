@@ -24,12 +24,14 @@ function downloadTextFile(content: string, filename: string, mimeType: string) {
 function downloadSkinImage(image: HTMLImageElement, filename: string): Promise<void> {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
+    canvas.width = 256;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
     if (!ctx) { resolve(); return; }
     
-    ctx.drawImage(image, 0, 0);
+    // Scale the 64x64 texture to 256x256 using NEAREST NEIGHBOR interpolation
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(image, 0, 0, 64, 64, 0, 0, 256, 256);
     
     canvas.toBlob((blob) => {
       if (!blob) { resolve(); return; }

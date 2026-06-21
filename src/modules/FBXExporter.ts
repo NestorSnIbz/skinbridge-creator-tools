@@ -36,38 +36,58 @@ function downloadBinaryFile(data: Uint8Array, filename: string) {
 export function exportToFBX(input: THREE.Object3D, skinImage: HTMLImageElement): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      // Prepare the skin texture as a data URL for embedding
+      // Prepare the skin texture as a 256x256 Nearest-Neighbor scaled data URL for embedding
       const canvas = document.createElement('canvas');
-      canvas.width = 64;
-      canvas.height = 64;
+      canvas.width = 256;
+      canvas.height = 256;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         reject(new Error('No se pudo crear el contexto 2D para la textura.'));
         return;
       }
-      ctx.drawImage(skinImage, 0, 0);
+      // Disable bilinear/trilinear filtering to use Nearest Neighbor
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(skinImage, 0, 0, 64, 64, 0, 0, 256, 256);
       const skinDataUrl = canvas.toDataURL('image/png');
 
-      // Ensure textures have their image source set as data URL for embedding
-      input.traverse((child) => {
+      // Clone the entire input group to prevent mutating the original ThreeViewer scene/textures
+      const clonedInput = input.clone();
+      clonedInput.traverse((child) => {
         if (child instanceof THREE.Mesh) {
+          // Clone materials so we don't modify the shared material references
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material = child.material.map(m => m.clone());
+            } else {
+              child.material = child.material.clone();
+            }
+          }
+          
           const mat = child.material;
           const materials = Array.isArray(mat) ? mat : [mat];
           
           materials.forEach((m) => {
             if (m && m.map) {
-              // Set the source as data URL so the exporter can embed it
-              if (m.map.image) {
-                m.map.image.src = skinDataUrl;
-              }
+              // Clone the texture map so we don't modify the shared texture instance
+              m.map = m.map.clone();
+              
+              // Set nearest neighbor interpolation on the material texture map
+              m.map.minFilter = THREE.NearestFilter;
+              m.map.magFilter = THREE.NearestFilter;
+              m.map.generateMipmaps = false;
+              
+              // Set the image source as the scaled base64 data URL so exporter can embed it
+              const img = new Image();
+              img.src = skinDataUrl;
+              m.map.image = img;
               m.map.sourceFile = 'textura.png';
             }
           });
         }
       });
 
-      // Export to binary FBX with Blender-compatible settings
-      const fbxBytes = exportFbx(input, {
+      // Export the cloned model to binary FBX with Blender-compatible settings
+      const fbxBytes = exportFbx(clonedInput, {
         format: 'binary',
         target: 'blender',
         embedTextures: true,
