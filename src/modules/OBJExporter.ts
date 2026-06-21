@@ -227,13 +227,12 @@ function buildBaseHead(skinImage: HTMLImageElement): THREE.Group {
       faceIndex: 2,
       startX: 8, startY: 0,
       applyRotation: (geom: THREE.BufferGeometry) => {
-        geom.rotateZ(Math.PI);
         geom.rotateX(-Math.PI / 2);
       },
       getPos: (col: number, row: number) => ({
-        x: gridOffset - col * pixelSize,
+        x: -gridOffset + col * pixelSize,
         y: offset,
-        z: gridOffset - row * pixelSize
+        z: -gridOffset + row * pixelSize
       })
     },
     { // Face 3 (Bottom, -Y)
@@ -254,7 +253,7 @@ function buildBaseHead(skinImage: HTMLImageElement): THREE.Group {
       startX: 8, startY: 8,
       applyRotation: (_geom: THREE.BufferGeometry) => {},
       getPos: (col: number, row: number) => ({
-        x: gridOffset - col * pixelSize,
+        x: -gridOffset + col * pixelSize,
         y: gridOffset - row * pixelSize,
         z: offset
       })
@@ -380,13 +379,12 @@ function buildVoxelizedOverlay(skinImage: HTMLImageElement): THREE.Group {
       faceIndex: 2,
       startX: 40, startY: 0,
       applyRotation: (geom: THREE.BufferGeometry) => {
-        geom.rotateZ(Math.PI);
         geom.rotateX(-Math.PI / 2);
       },
       getPos: (col: number, row: number) => ({
-        x: gridOffset - col * pixelSize,
+        x: -gridOffset + col * pixelSize,
         y: offset,
-        z: gridOffset - row * pixelSize
+        z: -gridOffset + row * pixelSize
       })
     },
     { // Face 3 (Bottom, -Y)
@@ -407,7 +405,7 @@ function buildVoxelizedOverlay(skinImage: HTMLImageElement): THREE.Group {
       startX: 40, startY: 8,
       applyRotation: (_geom: THREE.BufferGeometry) => {},
       getPos: (col: number, row: number) => ({
-        x: gridOffset - col * pixelSize,
+        x: -gridOffset + col * pixelSize,
         y: gridOffset - row * pixelSize,
         z: offset
       })
