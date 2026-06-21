@@ -280,17 +280,16 @@ function mapBodyPart(
   skinData: ImageData,
   mcPart: BodyPartFaces,
   robloxPart: BodyPartFaces,
-  partName?: string
+  _partName?: string
 ) {
   const faces: (keyof BodyPartFaces)[] = ['front', 'back', 'left', 'right', 'top', 'bottom'];
   for (const face of faces) {
     let flipH = false;
     let flipV = false;
 
-    // Flip the torso bottom face horizontally and vertically to correct
-    // anatomical inversion in Roblox Classic clothing template projection.
-    if (partName === 'torso' && face === 'bottom') {
-      flipH = true;
+    // Flip torso and limb bottom faces vertically to correct anatomical inversion
+    // in Roblox Classic clothing template projection (keeping horizontal correct).
+    if (face === 'bottom') {
       flipV = true;
     }
 
