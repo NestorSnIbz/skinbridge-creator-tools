@@ -204,12 +204,15 @@ p, li, blockquote {
 }
 
 .logo-text {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
   background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #6366f1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  /* Visual Signature: Voxel double-drop-shadow representing blocky game aesthetics */
+  filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5)) drop-shadow(2px 2px 0px rgba(99, 102, 241, 0.15));
 }
 
 .badge {

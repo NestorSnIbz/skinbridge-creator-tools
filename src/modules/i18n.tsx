@@ -10,7 +10,7 @@ export const translations: Record<Language, TranslationDictionary> = {
   en: {
     // Header
     nav_dashboard: "Dashboard",
-    app_title: "MINECRAFT SKIN TOOL",
+    app_title: "SkinBridge",
     app_subtitle: "3D Model & Roblox Clothing",
     module_3d_head: "3D Head Model",
     module_roblox: "Roblox Clothing Templates",
@@ -106,7 +106,7 @@ export const translations: Record<Language, TranslationDictionary> = {
   es: {
     // Header
     nav_dashboard: "Panel",
-    app_title: "MINECRAFT SKIN TOOL",
+    app_title: "SkinBridge",
     app_subtitle: "Modelo 3D & Ropa Roblox",
     module_3d_head: "Modelo Cabeza 3D",
     module_roblox: "Plantillas Ropa Roblox",
