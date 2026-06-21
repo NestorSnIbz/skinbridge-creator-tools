@@ -25,7 +25,8 @@ interface FaceUVCoords {
 function setFaceUVs(
   uvAttribute: THREE.BufferAttribute,
   faceIndex: number,
-  coords: FaceUVCoords
+  coords: FaceUVCoords,
+  isOverlay: boolean
 ) {
   const textureSize = 64;
   
@@ -37,17 +38,28 @@ function setFaceUVs(
 
   const startIdx = faceIndex * 4;
   
-  if (faceIndex === 3) {
-    // Vertically flip bottom face for correct Minecraft skin orientation
+  if (faceIndex === 2 && !isOverlay) {
+    // Revert change for base layer top face: horizontally mirrored mapping
     // Vertex 0 (Top-Left of face)
-    uvAttribute.setXY(startIdx, uMin, vMin);
+    uvAttribute.setXY(startIdx, uMax, vMax);
     // Vertex 1 (Top-Right of face)
-    uvAttribute.setXY(startIdx + 1, uMax, vMin);
+    uvAttribute.setXY(startIdx + 1, uMin, vMax);
     // Vertex 2 (Bottom-Left of face)
-    uvAttribute.setXY(startIdx + 2, uMin, vMax);
+    uvAttribute.setXY(startIdx + 2, uMax, vMin);
     // Vertex 3 (Bottom-Right of face)
-    uvAttribute.setXY(startIdx + 3, uMax, vMax);
+    uvAttribute.setXY(startIdx + 3, uMin, vMin);
+  } else if (faceIndex === 3) {
+    // Bottom face: vertically flipped AND horizontally mirrored to match standard Minecraft skin layout orientation
+    // Vertex 0 (Top-Left of face: bottom-left-front)
+    uvAttribute.setXY(startIdx, uMax, vMin);
+    // Vertex 1 (Top-Right of face: bottom-right-front)
+    uvAttribute.setXY(startIdx + 1, uMin, vMin);
+    // Vertex 2 (Bottom-Left of face: bottom-left-back)
+    uvAttribute.setXY(startIdx + 2, uMax, vMax);
+    // Vertex 3 (Bottom-Right of face: bottom-right-back)
+    uvAttribute.setXY(startIdx + 3, uMin, vMax);
   } else {
+    // All other faces (including Top face of outer layer): standard mapping
     // Vertex 0 (Top-Left of face)
     uvAttribute.setXY(startIdx, uMin, vMax);
     // Vertex 1 (Top-Right of face)
@@ -80,7 +92,7 @@ export function applyHeadUVs(geometry: THREE.BoxGeometry, isOverlay: boolean) {
   };
 
   for (let faceIdx = 0; faceIdx < 6; faceIdx++) {
-    setFaceUVs(uvAttribute, faceIdx, faces[faceIdx]);
+    setFaceUVs(uvAttribute, faceIdx, faces[faceIdx], isOverlay);
   }
 
   // Mark the UV attribute as needing an update

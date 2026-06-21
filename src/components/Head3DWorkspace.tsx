@@ -260,10 +260,10 @@ export default function Head3DWorkspace({
           </div>
 
           <div className="viewer-actions">
-            <button className="glow-btn-secondary" onClick={handleExportOBJ} disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+            <button className="glow-btn-secondary" onClick={handleExportOBJ}>
               <Download size={18} /> OBJ
             </button>
-            <button className="glow-btn-secondary" onClick={handleExportFBX} disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+            <button className="glow-btn-secondary" onClick={handleExportFBX}>
               <Download size={18} /> FBX
             </button>
             <button className="glow-btn-secondary" onClick={handleExportGLB}>
