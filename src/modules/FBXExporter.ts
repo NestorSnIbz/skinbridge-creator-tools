@@ -50,54 +50,65 @@ export function exportToFBX(input: THREE.Object3D, skinImage: HTMLImageElement):
       ctx.drawImage(skinImage, 0, 0, 64, 64, 0, 0, 256, 256);
       const skinDataUrl = canvas.toDataURL('image/png');
 
-      // Clone the entire input group to prevent mutating the original ThreeViewer scene/textures
-      const clonedInput = input.clone();
-      clonedInput.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          // Clone materials so we don't modify the shared material references
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material = child.material.map(m => m.clone());
-            } else {
-              child.material = child.material.clone();
-            }
-          }
-          
-          const mat = child.material;
-          const materials = Array.isArray(mat) ? mat : [mat];
-          
-          materials.forEach((m) => {
-            if (m && m.map) {
-              // Clone the texture map so we don't modify the shared texture instance
-              m.map = m.map.clone();
+      const img = new Image();
+      img.onload = () => {
+        try {
+          // Clone the entire input group to prevent mutating the original ThreeViewer scene/textures
+          const clonedInput = input.clone();
+          clonedInput.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              // Clone materials so we don't modify the shared material references
+              if (child.material) {
+                if (Array.isArray(child.material)) {
+                  child.material = child.material.map(m => m.clone());
+                } else {
+                  child.material = child.material.clone();
+                }
+              }
               
-              // Set nearest neighbor interpolation on the material texture map
-              m.map.minFilter = THREE.NearestFilter;
-              m.map.magFilter = THREE.NearestFilter;
-              m.map.generateMipmaps = false;
+              const mat = child.material;
+              const materials = Array.isArray(mat) ? mat : [mat];
               
-              // Set the image source as the scaled base64 data URL so exporter can embed it
-              const img = new Image();
-              img.src = skinDataUrl;
-              m.map.image = img;
-              m.map.sourceFile = 'textura.png';
+              materials.forEach((m) => {
+                if (m && m.map) {
+                  // Clone the texture map so we don't modify the shared texture instance
+                  m.map = m.map.clone();
+                  
+                  // Set nearest neighbor interpolation on the material texture map
+                  m.map.minFilter = THREE.NearestFilter;
+                  m.map.magFilter = THREE.NearestFilter;
+                  m.map.generateMipmaps = false;
+                  
+                  // Set the image source as the loaded HTMLImageElement
+                  m.map.image = img;
+                  m.map.sourceFile = 'textura.png';
+                }
+              });
             }
           });
+
+          // Export the cloned model to binary FBX with Blender-compatible settings
+          const fbxBytes = exportFbx(clonedInput, {
+            format: 'binary',
+            target: 'blender',
+            embedTextures: true,
+            onWarning: (warning) => {
+              console.warn('[FBX Export Warning]', warning.message || warning.code);
+            },
+          });
+
+          downloadBinaryFile(fbxBytes, 'cabeza.fbx');
+          resolve();
+        } catch (exportError) {
+          reject(exportError);
         }
-      });
+      };
 
-      // Export the cloned model to binary FBX with Blender-compatible settings
-      const fbxBytes = exportFbx(clonedInput, {
-        format: 'binary',
-        target: 'blender',
-        embedTextures: true,
-        onWarning: (warning) => {
-          console.warn('[FBX Export Warning]', warning.message || warning.code);
-        },
-      });
+      img.onerror = () => {
+        reject(new Error('No se pudo cargar la imagen de la textura escalada.'));
+      };
 
-      downloadBinaryFile(fbxBytes, 'cabeza.fbx');
-      resolve();
+      img.src = skinDataUrl;
     } catch (error) {
       reject(error);
     }
