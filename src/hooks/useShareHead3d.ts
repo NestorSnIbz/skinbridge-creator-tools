@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { nanoid } from 'nanoid';
 import { type ExtractedFaces } from '../modules/TextureExtractor';
+import { checkRateLimit, RateLimitError } from '../lib/rateLimit';
 
 export function useShareHead3d() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [minutesLeft, setMinutesLeft] = useState<number | null>(null);
 
   const share = async (
     previewCanvas: HTMLCanvasElement | null,
@@ -18,11 +20,14 @@ export function useShareHead3d() {
     setLoading(true);
     setError(null);
     setShareUrl(null);
+    setMinutesLeft(null);
 
     try {
       if (!skinSrc || !extractedFaces) {
         throw new Error('Skin source and face textures are required.');
       }
+
+      await checkRateLimit('head3d');
 
       const slug = nanoid(10);
 
@@ -100,17 +105,22 @@ export function useShareHead3d() {
       const generatedUrl = `${window.location.origin}/share/head3d/${slug}`;
       setShareUrl(generatedUrl);
       return generatedUrl;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error during Head3D share:', err);
-      const errMsg = err.message || 'An unexpected error occurred while sharing.';
-      setError(errMsg);
-      throw new Error(errMsg);
+      if (err instanceof RateLimitError) {
+        setMinutesLeft(err.minutesLeft);
+        setError(err.message);
+      } else {
+        const errMsg = err instanceof Error ? err.message : 'An unexpected error occurred while sharing.';
+        setError(errMsg);
+      }
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  return { shareUrl, loading, error, share };
+  return { shareUrl, loading, error, minutesLeft, share };
 }
 
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {

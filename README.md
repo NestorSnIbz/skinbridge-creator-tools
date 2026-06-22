@@ -71,6 +71,14 @@ To set up the backend database and storage:
 4. **Environment Variables:**
    - Copy `.env.example` to a new file named `.env`.
    - Replace the values of `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` with your project's credentials (found under Project Settings > API).
+5. **Deploy Rate-Limiting Edge Function:**
+   - SkinBridge secures sharing using a server-side IP rate limiter (max 10 shares per IP per hour per workspace).
+   - Generate an access token from Account Settings > Access Tokens in your Supabase dashboard.
+   - Run the following commands to login and deploy the Edge Function:
+     ```bash
+     npx supabase login
+     npx supabase functions deploy check-rate-limit --project-ref <your-project-ref>
+     ```
 
 ---
 
