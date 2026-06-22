@@ -22,7 +22,7 @@ interface AppStats {
 
 interface DashboardViewProps {
   stats: AppStats;
-  navigateToModule: (module: 'dashboard' | 'head3d' | 'roblox') => void;
+  navigateToModule: (module: 'dashboard' | 'head3d' | 'roblox' | 'blockbench') => void;
 }
 
 const getBlockBar = (pct: number, length: number = 20) => {
@@ -143,6 +143,35 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
             {t('dash_roblox_desc')}
           </p>
           <button className="glow-btn-roblox" onClick={() => navigateToModule('roblox')} style={{ padding: '10px 16px', fontSize: '0.9rem' }}>
+            {t('dash_launch_workspace')}
+          </button>
+        </div>
+
+        {/* Card 3: Blockbench */}
+        <div className="glass-panel workspace-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ background: 'rgba(52, 211, 153, 0.15)', padding: '10px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="#34d399" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+                <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                <polyline points="2 17 12 22 22 17" />
+                <polyline points="2 12 12 17 22 12" />
+              </svg>
+            </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{t('dash_blockbench_title')}</h3>
+          </div>
+          <p style={{ margin: 0, color: '#a1a1aa', fontSize: '0.875rem', lineHeight: '1.5', flexGrow: 1 }}>
+            {t('dash_blockbench_desc')}
+          </p>
+          <button 
+            className="glow-btn" 
+            onClick={() => navigateToModule('blockbench')} 
+            style={{ 
+              padding: '10px 16px', 
+              fontSize: '0.9rem', 
+              background: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)', 
+              boxShadow: '0 0 15px rgba(52, 211, 153, 0.3)' 
+            }}
+          >
             {t('dash_launch_workspace')}
           </button>
         </div>
