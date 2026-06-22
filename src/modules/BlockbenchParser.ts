@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { dilateTexture } from './OBJExporter';
 
 export interface BlockbenchTexture {
   id: string;
@@ -9,6 +10,7 @@ export interface BlockbenchTexture {
   height: number;
   loadedImage?: HTMLImageElement;
   threeMaterial?: THREE.MeshStandardMaterial;
+  imgData?: ImageData;
 }
 
 export interface ParsedBlockbenchModel {
@@ -56,53 +58,275 @@ function generateFallbackTexture(): HTMLImageElement {
   return img;
 }
 
-/**
- * Normalizes and rotates UV coordinate coordinates for a BoxGeometry face.
- */
-function assignFaceUVs(
-  uvAttribute: THREE.BufferAttribute,
-  faceIndex: number,
-  u1: number,
-  v1: number,
-  u2: number,
-  v2: number,
-  texWidth: number,
-  texHeight: number,
-  rotation: number
-) {
-  // Apply a tiny half-pixel inset margin (0.02 pixels) to pull UV coordinates slightly inward.
-  // This completely eliminates Bilinear Bleeding / Alpha Bleeding (dark lines and blurry transitions at the borders).
-  const margin = 0.02;
-  
-  const uMin = (u1 < u2 ? u1 + margin : u1 - margin) / texWidth;
-  const uMax = (u1 < u2 ? u2 - margin : u2 + margin) / texWidth;
-  const vMin = 1.0 - ((v1 < v2 ? v2 - margin : v2 + margin) / texHeight);
-  const vMax = 1.0 - ((v1 < v2 ? v1 + margin : v1 - margin) / texHeight);
 
-  // Default Three.js vertex order for a face: TL, TR, BL, BR
-  const points = [
-    { u: uMin, v: vMax }, // Top-Left
-    { u: uMax, v: vMax }, // Top-Right
-    { u: uMin, v: vMin }, // Bottom-Left
-    { u: uMax, v: vMin }  // Bottom-Right
+function buildPlaneGeometry(
+  w: number,
+  h: number,
+  uMin: number,
+  uMax: number,
+  vMin: number,
+  vMax: number
+): THREE.BufferGeometry {
+  const geom = new THREE.PlaneGeometry(w, h);
+  const uvAttr = geom.attributes.uv as THREE.BufferAttribute;
+  uvAttr.setXY(0, uMin, vMax);
+  uvAttr.setXY(1, uMax, vMax);
+  uvAttr.setXY(2, uMin, vMin);
+  uvAttr.setXY(3, uMax, vMin);
+  uvAttr.needsUpdate = true;
+  
+  const nonIndexed = geom.toNonIndexed();
+  geom.dispose();
+  return nonIndexed;
+}
+
+function mergeBufferGeometries(geometries: THREE.BufferGeometry[]): THREE.BufferGeometry {
+  const mergedGeom = new THREE.BufferGeometry();
+
+  let totalVertices = 0;
+  geometries.forEach((g) => {
+    totalVertices += g.attributes.position.count;
+  });
+
+  const positions = new Float32Array(totalVertices * 3);
+  const normals = new Float32Array(totalVertices * 3);
+  const uvs = new Float32Array(totalVertices * 2);
+
+  let vertexOffset = 0;
+  geometries.forEach((g) => {
+    const posAttr = g.attributes.position;
+    const normAttr = g.attributes.normal;
+    const uvAttr = g.attributes.uv;
+
+    const count = posAttr.count;
+
+    for (let i = 0; i < count; i++) {
+      positions[(vertexOffset + i) * 3] = posAttr.getX(i);
+      positions[(vertexOffset + i) * 3 + 1] = posAttr.getY(i);
+      positions[(vertexOffset + i) * 3 + 2] = posAttr.getZ(i);
+
+      normals[(vertexOffset + i) * 3] = normAttr.getX(i);
+      normals[(vertexOffset + i) * 3 + 1] = normAttr.getY(i);
+      normals[(vertexOffset + i) * 3 + 2] = normAttr.getZ(i);
+
+      uvs[(vertexOffset + i) * 2] = uvAttr.getX(i);
+      uvs[(vertexOffset + i) * 2 + 1] = uvAttr.getY(i);
+    }
+
+    vertexOffset += count;
+  });
+
+  mergedGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  mergedGeom.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+  mergedGeom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+
+  const indices = new Uint16Array(totalVertices);
+  for (let i = 0; i < totalVertices; i++) {
+    indices[i] = i;
+  }
+  mergedGeom.setIndex(new THREE.BufferAttribute(indices, 1));
+
+  return mergedGeom;
+}
+
+function buildVoxelizedBoxGeometry(
+  width: number,
+  height: number,
+  depth: number,
+  facesData: any,
+  getTextureByRef: (ref: any) => BlockbenchTexture
+): THREE.BufferGeometry {
+  const geometries: THREE.BufferGeometry[] = [];
+  const faceVertexCounts = [0, 0, 0, 0, 0, 0];
+
+  const faceDefs = [
+    {
+      key: 'east', idx: 0,
+      buildQuad: (col: number, row: number, u: number, v: number, w_seg: number, h_seg: number) => {
+        const segW = depth / w_seg;
+        const segH = height / h_seg;
+        const geom = buildPlaneGeometry(segW, segH, u, u, v, v);
+        geom.rotateY(Math.PI / 2);
+        const px = width / 2;
+        const py = height / 2 - segH / 2 - row * segH;
+        const pz = depth / 2 - segW / 2 - col * segW;
+        geom.translate(px, py, pz);
+        return geom;
+      }
+    },
+    {
+      key: 'west', idx: 1,
+      buildQuad: (col: number, row: number, u: number, v: number, w_seg: number, h_seg: number) => {
+        const segW = depth / w_seg;
+        const segH = height / h_seg;
+        const geom = buildPlaneGeometry(segW, segH, u, u, v, v);
+        geom.rotateY(-Math.PI / 2);
+        const px = -width / 2;
+        const py = height / 2 - segH / 2 - row * segH;
+        const pz = -depth / 2 + segW / 2 + col * segW;
+        geom.translate(px, py, pz);
+        return geom;
+      }
+    },
+    {
+      key: 'up', idx: 2,
+      buildQuad: (col: number, row: number, u: number, v: number, w_seg: number, h_seg: number) => {
+        const segW = width / w_seg;
+        const segH = depth / h_seg;
+        const geom = buildPlaneGeometry(segW, segH, u, u, v, v);
+        geom.rotateX(-Math.PI / 2);
+        const px = -width / 2 + segW / 2 + col * segW;
+        const py = height / 2;
+        const pz = -depth / 2 + segH / 2 + row * segH;
+        geom.translate(px, py, pz);
+        return geom;
+      }
+    },
+    {
+      key: 'down', idx: 3,
+      buildQuad: (col: number, row: number, u: number, v: number, w_seg: number, h_seg: number) => {
+        const segW = width / w_seg;
+        const segH = depth / h_seg;
+        const geom = buildPlaneGeometry(segW, segH, u, u, v, v);
+        geom.rotateX(Math.PI / 2);
+        const px = -width / 2 + segW / 2 + col * segW;
+        const py = -height / 2;
+        const pz = depth / 2 - segH / 2 - row * segH;
+        geom.translate(px, py, pz);
+        return geom;
+      }
+    },
+    {
+      key: 'south', idx: 4,
+      buildQuad: (col: number, row: number, u: number, v: number, w_seg: number, h_seg: number) => {
+        const segW = width / w_seg;
+        const segH = height / h_seg;
+        const geom = buildPlaneGeometry(segW, segH, u, u, v, v);
+        const px = -width / 2 + segW / 2 + col * segW;
+        const py = height / 2 - segH / 2 - row * segH;
+        const pz = depth / 2;
+        geom.translate(px, py, pz);
+        return geom;
+      }
+    },
+    {
+      key: 'north', idx: 5,
+      buildQuad: (col: number, row: number, u: number, v: number, w_seg: number, h_seg: number) => {
+        const segW = width / w_seg;
+        const segH = height / h_seg;
+        const geom = buildPlaneGeometry(segW, segH, u, u, v, v);
+        geom.rotateY(Math.PI);
+        const px = width / 2 - segW / 2 - col * segW;
+        const py = height / 2 - segH / 2 - row * segH;
+        const pz = -depth / 2;
+        geom.translate(px, py, pz);
+        return geom;
+      }
+    }
   ];
 
-  // Rotate UV coordinates if specified (90, 180, 270 degrees clockwise)
-  let rotated = points;
-  if (rotation === 90) {
-    rotated = [points[2], points[0], points[3], points[1]];
-  } else if (rotation === 180) {
-    rotated = [points[3], points[2], points[1], points[0]];
-  } else if (rotation === 270) {
-    rotated = [points[1], points[3], points[0], points[2]];
+  for (const fDef of faceDefs) {
+    const fData = facesData ? facesData[fDef.key] : null;
+    let texWidth = 64;
+    let texHeight = 64;
+    let hasTexture = false;
+
+    if (fData && fData.texture !== undefined && fData.texture !== null) {
+      const tex = getTextureByRef(fData.texture);
+      texWidth = tex.width;
+      texHeight = tex.height;
+      hasTexture = true;
+    }
+
+    const uv = (fData && fData.uv) || [0, 0, 16, 16];
+    const u1 = uv[0];
+    const v1 = uv[1];
+    const u2 = uv[2];
+    const v2 = uv[3];
+
+    const uMin = Math.min(u1, u2);
+    const uMax = Math.max(u1, u2);
+    const vMin = Math.min(v1, v2);
+    const vMax = Math.max(v1, v2);
+
+    const uv_w = Math.max(1, Math.round(uMax - uMin));
+    const uv_h = Math.max(1, Math.round(vMax - vMin));
+
+    const rot = (fData && fData.rotation) || 0;
+
+    let w_seg = uv_w;
+    let h_seg = uv_h;
+    if (rot === 90 || rot === 270) {
+      w_seg = uv_h;
+      h_seg = uv_w;
+    }
+
+    for (let row = 0; row < h_seg; row++) {
+      for (let col = 0; col < w_seg; col++) {
+        // Calculate normalized face coordinates (0 to 1) for the center of the quad segment
+        const f_u = (col + 0.5) / w_seg;
+        const f_v = (row + 0.5) / h_seg;
+
+        // Rotate face coordinates based on UV rotation
+        let r_u = f_u;
+        let r_v = f_v;
+        if (rot === 90) {
+          r_u = f_v;
+          r_v = 1.0 - f_u;
+        } else if (rot === 180) {
+          r_u = 1.0 - f_u;
+          r_v = 1.0 - f_v;
+        } else if (rot === 270) {
+          r_u = 1.0 - f_v;
+          r_v = f_u;
+        }
+
+        // Map rotated face coordinates to texture pixel coordinates
+        const px_u = u1 + r_u * (u2 - u1);
+        const px_v = v1 + r_v * (v2 - v1);
+
+        // Alpha check: skip transparent pixels (alpha < 10) to cut out geometry physically
+        if (hasTexture) {
+          const tex = getTextureByRef(fData.texture);
+          if (tex && tex.imgData) {
+            const px_x = Math.min(tex.width - 1, Math.max(0, Math.floor(px_u)));
+            const px_y = Math.min(tex.height - 1, Math.max(0, Math.floor(px_v)));
+            const pixelIdx = (px_y * tex.width + px_x) * 4;
+            const alpha = tex.imgData.data[pixelIdx + 3];
+            if (alpha < 10) {
+              continue;
+            }
+          }
+        }
+
+        const uNorm = hasTexture ? px_u / texWidth : 0.5 / texWidth;
+        const vNorm = hasTexture ? 1.0 - (px_v / texHeight) : 1.0 - (0.5 / texHeight);
+
+        const quadGeom = fDef.buildQuad(col, row, uNorm, vNorm, w_seg, h_seg);
+        geometries.push(quadGeom);
+        faceVertexCounts[fDef.idx] += 6;
+      }
+    }
   }
 
-  // Write UV coordinates to buffer
-  const startIdx = faceIndex * 4;
-  uvAttribute.setXY(startIdx + 0, rotated[0].u, rotated[0].v); // TL
-  uvAttribute.setXY(startIdx + 1, rotated[1].u, rotated[1].v); // TR
-  uvAttribute.setXY(startIdx + 2, rotated[2].u, rotated[2].v); // BL
-  uvAttribute.setXY(startIdx + 3, rotated[3].u, rotated[3].v); // BR
+  if (geometries.length === 0) {
+    return new THREE.BufferGeometry();
+  }
+
+  const merged = mergeBufferGeometries(geometries);
+  geometries.forEach(g => g.dispose());
+
+  // Add groups for multi-material mapping
+  let start = 0;
+  for (let i = 0; i < 6; i++) {
+    const count = faceVertexCounts[i];
+    if (count > 0) {
+      merged.addGroup(start, count, i);
+      start += count;
+    }
+  }
+
+  return merged;
 }
 
 /**
@@ -125,11 +349,30 @@ function scaleImageTo1024(image: HTMLImageElement): Promise<HTMLImageElement> {
     (ctx as any).webkitImageSmoothingEnabled = false;
     (ctx as any).msImageSmoothingEnabled = false;
     
-    ctx.drawImage(
-      image,
-      0, 0, image.naturalWidth || image.width, image.naturalHeight || image.height,
-      0, 0, 1024, 1024
-    );
+    // Create temporary canvas to dilate texture at its original resolution first,
+    // which is how the border/seam problem was solved in the head3d OBJ export.
+    const tempCanvas = document.createElement('canvas');
+    const w = image.naturalWidth || image.width || 64;
+    const h = image.naturalHeight || image.height || 64;
+    tempCanvas.width = w;
+    tempCanvas.height = h;
+    const tempCtx = tempCanvas.getContext('2d');
+    if (tempCtx) {
+      tempCtx.drawImage(image, 0, 0);
+      try {
+        const imgData = tempCtx.getImageData(0, 0, w, h);
+        const dilatedData = dilateTexture(imgData);
+        tempCtx.putImageData(dilatedData, 0, 0);
+        
+        // Draw dilated texture scaled up to 1024x1024 using nearest-neighbor
+        ctx.drawImage(tempCanvas, 0, 0, w, h, 0, 0, 1024, 1024);
+      } catch (e) {
+        console.warn('Failed to dilate texture, falling back to simple scale:', e);
+        ctx.drawImage(image, 0, 0, w, h, 0, 0, 1024, 1024);
+      }
+    } else {
+      ctx.drawImage(image, 0, 0, w, h, 0, 0, 1024, 1024);
+    }
     
     const scaledImg = new Image();
     scaledImg.onload = () => resolve(scaledImg);
@@ -168,6 +411,16 @@ export async function parseBlockbenchModel(jsonText: string): Promise<ParsedBloc
       img = generateFallbackTexture();
     }
 
+    // Extract original image pixel data
+    const tempCanvas = document.createElement('canvas');
+    const w = img.naturalWidth || img.width || 64;
+    const h = img.naturalHeight || img.height || 64;
+    tempCanvas.width = w;
+    tempCanvas.height = h;
+    const tempCtx = tempCanvas.getContext('2d')!;
+    tempCtx.drawImage(img, 0, 0);
+    const imgData = tempCtx.getImageData(0, 0, w, h);
+
     // Scale up to 1024x1024 to make Roblox Studio render it sharp
     const scaledImg = await scaleImageTo1024(img);
 
@@ -196,16 +449,24 @@ export async function parseBlockbenchModel(jsonText: string): Promise<ParsedBloc
       uuid: tex.uuid,
       name: tex.name || 'texture.png',
       source: tex.source || '',
-      width: tex.width || 64,
-      height: tex.height || 64,
+      width: w,
+      height: h,
       loadedImage: scaledImg,
-      threeMaterial: material
+      threeMaterial: material,
+      imgData: imgData
     });
   }
 
   // Fallback if no textures exist in the file
   if (parsedTextures.length === 0) {
     const fallbackImg = generateFallbackTexture();
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 64;
+    tempCanvas.height = 64;
+    const tempCtx = tempCanvas.getContext('2d')!;
+    tempCtx.drawImage(fallbackImg, 0, 0);
+    const imgData = tempCtx.getImageData(0, 0, 64, 64);
+
     const scaledFallbackImg = await scaleImageTo1024(fallbackImg);
     const texture = new THREE.Texture(scaledFallbackImg);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -231,7 +492,8 @@ export async function parseBlockbenchModel(jsonText: string): Promise<ParsedBloc
       width: 64,
       height: 64,
       loadedImage: scaledFallbackImg,
-      threeMaterial: material
+      threeMaterial: material,
+      imgData: imgData
     });
   }
 
@@ -286,8 +548,7 @@ export async function parseBlockbenchModel(jsonText: string): Promise<ParsedBloc
     const height = Math.abs(to[1] - from[1]);
     const depth = Math.abs(to[2] - from[2]);
 
-    const geometry = new THREE.BoxGeometry(width, height, depth);
-    const uvAttribute = geometry.getAttribute('uv') as THREE.BufferAttribute;
+    const geometry = buildVoxelizedBoxGeometry(width, height, depth, el.faces, getTextureByRef);
 
     // Blockbench coordinates: center is mid-point
     const centerX = (from[0] + to[0]) / 2;
@@ -312,26 +573,10 @@ export async function parseBlockbenchModel(jsonText: string): Promise<ParsedBloc
       if (faceData && faceData.texture !== undefined && faceData.texture !== null) {
         const tex = getTextureByRef(faceData.texture);
         materials.push(tex.threeMaterial || parsedTextures[0].threeMaterial!);
-        
-        // Map UV coordinates for this face
-        const uv = faceData.uv || [0, 0, 16, 16];
-        assignFaceUVs(
-          uvAttribute,
-          faceInfo.idx,
-          uv[0],
-          uv[1],
-          uv[2],
-          uv[3],
-          tex.width,
-          tex.height,
-          faceData.rotation || 0
-        );
       } else {
         materials.push(transparentMaterial);
       }
     }
-
-    geometry.attributes.uv.needsUpdate = true;
 
     // Create mesh
     const mesh = new THREE.Mesh(geometry, materials);

@@ -50,7 +50,7 @@ export function dilateTexture(imgData: ImageData): ImageData {
                 nextData[idx] = data[nIdx];
                 nextData[idx + 1] = data[nIdx + 1];
                 nextData[idx + 2] = data[nIdx + 2];
-                nextData[idx + 3] = 255; // Set opaque to prevent alpha blending issues
+                nextData[idx + 3] = data[idx + 3]; // Preserve original transparency (alpha < 10)
                 break;
               }
             }
