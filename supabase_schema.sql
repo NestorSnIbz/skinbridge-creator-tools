@@ -52,7 +52,23 @@ create policy "shares_head3d_insert_v3"
   with check (slug is not null);
 
 
--- 3. Unified View: shares_all (Merges shares & filters for last 7 days)
+-- 3. Table: rate_limits (Server-side IP rate limiting)
+create table if not exists rate_limits (
+  id uuid primary key default gen_random_uuid(),
+  ip text not null,
+  workspace text not null check (workspace in ('roblox', 'head3d')),
+  created_at timestamptz not null default now()
+);
+
+-- Composite index for quick rate limit evaluations
+create index if not exists idx_rate_limits_ip_workspace_time
+  on rate_limits (ip, workspace, created_at desc);
+
+-- Enable RLS on rate_limits (no public policies, accessible only via service_role by Edge Functions)
+alter table rate_limits enable row level security;
+
+
+-- 4. Unified View: shares_all (Merges shares & filters for last 7 days)
 create or replace view shares_all as
 select 
   slug,
@@ -81,7 +97,7 @@ grant select on table shares_all to anon;
 grant select on table shares_all to authenticated;
 
 
--- 4. Storage Bucket Setup (Guidelines)
+-- 5. Storage Bucket Setup (Guidelines)
 -- Note: Create a public storage bucket named 'conversions' in your Supabase console.
 -- Then run the following policy to allow anonymous uploads (INSERT):
 --
@@ -91,7 +107,7 @@ grant select on table shares_all to authenticated;
 -- WITH CHECK (bucket_id = 'conversions');
 
 
--- 5. Auto-Deletion Cleanup Job (Requires pg_cron extension)
+-- 6. Auto-Deletion Cleanup Job (Requires pg_cron extension)
 -- Enable pg_cron in Supabase under Database -> Extensions -> pg_cron
 create extension if not exists pg_cron;
 

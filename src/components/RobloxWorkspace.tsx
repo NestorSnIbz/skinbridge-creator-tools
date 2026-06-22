@@ -44,7 +44,7 @@ export default function RobloxWorkspace({
   const [autoRotate, setAutoRotate] = useState(false);
   const [armType, setArmType] = useState<'classic' | 'slim'>('classic');
 
-  const { share: shareRoblox } = useShareRoblox();
+  const { share: shareRoblox, minutesLeft } = useShareRoblox();
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
@@ -58,38 +58,7 @@ export default function RobloxWorkspace({
   const [puzzleB, setPuzzleB] = useState(0);
   const [puzzleAnswer, setPuzzleAnswer] = useState('');
   const [captchaError, setCaptchaError] = useState(false);
-  const [cooldownTime, setCooldownTime] = useState(0);
 
-  // Check cooldown on modal open
-  useEffect(() => {
-    if (showShareModal) {
-      const lastShare = localStorage.getItem('last_share_time_roblox');
-      if (lastShare) {
-        const elapsed = Math.floor((Date.now() - parseInt(lastShare, 10)) / 1000);
-        if (elapsed < 60) {
-          setCooldownTime(60 - elapsed);
-        } else {
-          setCooldownTime(0);
-        }
-      }
-    }
-  }, [showShareModal]);
-
-  // Cooldown countdown timer
-  useEffect(() => {
-    if (cooldownTime > 0) {
-      const timer = setInterval(() => {
-        setCooldownTime((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [cooldownTime]);
 
   const generatePuzzle = () => {
     setPuzzleA(Math.floor(Math.random() * 8) + 2); // 2 to 9
@@ -98,13 +67,6 @@ export default function RobloxWorkspace({
   };
 
   const handleShareClick = () => {
-    const lastShare = localStorage.getItem('last_share_time_roblox');
-    if (lastShare) {
-      const elapsed = Math.floor((Date.now() - parseInt(lastShare, 10)) / 1000);
-      if (elapsed < 60) {
-        setCooldownTime(60 - elapsed);
-      }
-    }
     setShowShareModal(true);
     setShareUrl(null);
     setShareError(null);
@@ -143,9 +105,7 @@ export default function RobloxWorkspace({
       );
       setShareUrl(url);
 
-      // Save last share time for cooldown
-      localStorage.setItem('last_share_time_roblox', Date.now().toString());
-      setCooldownTime(60);
+
 
       // Save to shared history in localStorage
       const historyStr = localStorage.getItem('shared_history') || '[]';
@@ -680,10 +640,10 @@ export default function RobloxWorkspace({
                 </div>
 
                 {/* Cooldown Alert */}
-                {cooldownTime > 0 && (
-                  <div style={{ padding: '8px 12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171', fontSize: '0.8rem', textAlign: 'center' }}>
-                    {t('share_cooldown').replace('{seconds}', cooldownTime.toString())}
-                  </div>
+                {minutesLeft !== null && minutesLeft > 0 && (
+                  <p style={{ color: '#f87171', fontSize: '0.85rem', textAlign: 'center', margin: '4px 0 0 0' }}>
+                    Too many shares. Please wait {minutesLeft} minute{minutesLeft !== 1 ? 's' : ''}.
+                  </p>
                 )}
 
                 {/* Confirm/Cancel Buttons */}
@@ -692,7 +652,7 @@ export default function RobloxWorkspace({
                     className="glow-btn" 
                     style={{ flex: 1, padding: '10px' }} 
                     onClick={handleConfirmShare}
-                    disabled={cooldownTime > 0 || !puzzleAnswer}
+                    disabled={(minutesLeft !== null && minutesLeft > 0) || !puzzleAnswer}
                   >
                     {t('share_btn_confirm')}
                   </button>

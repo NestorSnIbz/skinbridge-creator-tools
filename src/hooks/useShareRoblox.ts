@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { nanoid } from 'nanoid';
+import { checkRateLimit, RateLimitError } from '../lib/rateLimit';
 
 export function useShareRoblox() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [minutesLeft, setMinutesLeft] = useState<number | null>(null);
 
   const share = async (
     shirtCanvas: HTMLCanvasElement | null,
@@ -19,11 +21,14 @@ export function useShareRoblox() {
     setLoading(true);
     setError(null);
     setShareUrl(null);
+    setMinutesLeft(null);
 
     try {
       if (!shirtCanvas || !pantsCanvas) {
         throw new Error('Shirt and Pants templates must be generated first.');
       }
+
+      await checkRateLimit('roblox');
 
       const slug = nanoid(10);
 
@@ -99,17 +104,22 @@ export function useShareRoblox() {
       const generatedUrl = `${window.location.origin}/share/roblox/${slug}`;
       setShareUrl(generatedUrl);
       return generatedUrl;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error during Roblox share:', err);
-      const errMsg = err.message || 'An unexpected error occurred while sharing.';
-      setError(errMsg);
-      throw new Error(errMsg);
+      if (err instanceof RateLimitError) {
+        setMinutesLeft(err.minutesLeft);
+        setError(err.message);
+      } else {
+        const errMsg = err instanceof Error ? err.message : 'An unexpected error occurred while sharing.';
+        setError(errMsg);
+      }
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  return { shareUrl, loading, error, share };
+  return { shareUrl, loading, error, minutesLeft, share };
 }
 
 async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
