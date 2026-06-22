@@ -14,6 +14,24 @@ export const translations: Record<Language, TranslationDictionary> = {
     app_subtitle: "3D Model & Roblox Clothing",
     module_3d_head: "3D Head Model",
     module_roblox: "Roblox Clothing Templates",
+    nav_blockbench: "Blockbench Converter",
+    
+    // Blockbench Converter
+    dash_blockbench_title: "Blockbench Model Converter",
+    dash_blockbench_desc: "Convert Blockbench JSON (.bbmodel) files to standard OBJ and FBX formats client-side. Automatically parses materials, pivots, and UV mapping.",
+    bb_upload_title: "Upload .bbmodel File",
+    bb_upload_desc: "Drag your .bbmodel file or click to browse.",
+    bb_upload_btn: "Select Blockbench File",
+    bb_upload_format_hint: ".bbmodel files only",
+    bb_model_info: "Model Information",
+    bb_model_name: "Name",
+    bb_model_elements: "Elements (Cubes)",
+    bb_model_textures: "Textures",
+    bb_no_model: "No model loaded. Please upload a .bbmodel file to preview and export.",
+    toast_bb_load_success: "Blockbench model loaded successfully!",
+    toast_bb_parse_error: "Error parsing Blockbench model: {error}",
+    toast_bb_export_success: "Model exported successfully!",
+    toast_bb_export_error: "Error exporting model: {error}",
     
     // Dashboard
     dash_welcome: "Welcome back, Creator!",
@@ -170,6 +188,24 @@ export const translations: Record<Language, TranslationDictionary> = {
     app_subtitle: "Modelo 3D & Ropa Roblox",
     module_3d_head: "Modelo Cabeza 3D",
     module_roblox: "Plantillas Ropa Roblox",
+    nav_blockbench: "Convertidor Blockbench",
+    
+    // Blockbench Converter
+    dash_blockbench_title: "Convertidor de Modelos Blockbench",
+    dash_blockbench_desc: "Convierte archivos JSON de Blockbench (.bbmodel) a formatos estándar OBJ y FBX de forma 100% local. Procesa materiales, pivots y UVs automáticamente.",
+    bb_upload_title: "Subir archivo .bbmodel",
+    bb_upload_desc: "Arrastra tu archivo .bbmodel o haz clic para buscar.",
+    bb_upload_btn: "Seleccionar archivo Blockbench",
+    bb_upload_format_hint: "Solo archivos .bbmodel",
+    bb_model_info: "Información del Modelo",
+    bb_model_name: "Nombre",
+    bb_model_elements: "Elementos (Cubos)",
+    bb_model_textures: "Texturas",
+    bb_no_model: "No hay ningún modelo cargado. Sube un archivo .bbmodel para previsualizar y exportar.",
+    toast_bb_load_success: "¡Modelo de Blockbench cargado correctamente!",
+    toast_bb_parse_error: "Error al procesar el modelo de Blockbench: {error}",
+    toast_bb_export_success: "¡Modelo exportado correctamente!",
+    toast_bb_export_error: "Error al exportar el modelo: {error}",
     
     // Dashboard
     dash_welcome: "¡Bienvenido, Creador!",

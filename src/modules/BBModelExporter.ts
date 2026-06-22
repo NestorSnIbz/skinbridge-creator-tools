@@ -75,7 +75,7 @@ export function exportToBBModel(skinImage: HTMLImageElement) {
         folder: 'textures',
         namespace: 'minecraft',
         id: '0',
-        path: 'skin.png',
+        path: '',
         uuid: textureUuid,
         source: base64Texture,
       },

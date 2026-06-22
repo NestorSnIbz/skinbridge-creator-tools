@@ -7,10 +7,12 @@ import { I18nProvider, useTranslation } from './modules/i18n';
 import AdColumn from './components/AdColumn';
 import DashboardView from './components/DashboardView';
 import LoadingSkeleton from './components/LoadingSkeleton';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy-load heavy workspaces and pages
 const Head3DWorkspace = lazy(() => import('./components/Head3DWorkspace'));
 const RobloxWorkspace = lazy(() => import('./components/RobloxWorkspace'));
+const BlockbenchWorkspace = lazy(() => import('./components/BlockbenchWorkspace'));
 const ShareRobloxPage = lazy(() => import('./pages/ShareRobloxPage'));
 const ShareHead3dPage = lazy(() => import('./pages/ShareHead3dPage'));
 
@@ -122,6 +124,7 @@ export default function App() {
           <Route path="/dashboard" element={<AppContent activeTab="dashboard" />} />
           <Route path="/head3d" element={<AppContent activeTab="head3d" />} />
           <Route path="/roblox" element={<AppContent activeTab="roblox" />} />
+          <Route path="/blockbench" element={<AppContent activeTab="blockbench" />} />
           <Route path="/share/roblox/:slug" element={
             <Suspense fallback={<LoadingSkeleton />}>
               <ShareRobloxPage />
@@ -139,14 +142,14 @@ export default function App() {
   );
 }
 
-function AppContent({ activeTab }: { activeTab: 'dashboard' | 'head3d' | 'roblox' }) {
+function AppContent({ activeTab }: { activeTab: 'dashboard' | 'head3d' | 'roblox' | 'blockbench' }) {
   const { t, language, setLanguage } = useTranslation();
   const navigate = useNavigate();
   const [skinImage, setSkinImage] = useState<HTMLImageElement | null>(null);
   const [skinSrc, setSkinSrc] = useState<string>('');
   const [extractedFaces, setExtractedFaces] = useState<ExtractedFaces | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [activeModule, setActiveModule] = useState<'dashboard' | 'head3d' | 'roblox'>(activeTab);
+  const [activeModule, setActiveModule] = useState<'dashboard' | 'head3d' | 'roblox' | 'blockbench'>(activeTab);
 
   useEffect(() => {
     setActiveModule(activeTab);
@@ -237,7 +240,7 @@ function AppContent({ activeTab }: { activeTab: 'dashboard' | 'head3d' | 'roblox
     });
   };
 
-  const navigateToModule = (module: 'dashboard' | 'head3d' | 'roblox') => {
+  const navigateToModule = (module: 'dashboard' | 'head3d' | 'roblox' | 'blockbench') => {
     navigate(`/${module}`);
     if (module === 'head3d' || module === 'roblox') {
       logToolVisit(module);
@@ -367,6 +370,12 @@ function AppContent({ activeTab }: { activeTab: 'dashboard' | 'head3d' | 'roblox
             >
               {t('module_roblox')}
             </button>
+            <button 
+              className={`nav-btn ${activeModule === 'blockbench' ? 'active' : ''}`}
+              onClick={() => navigateToModule('blockbench')}
+            >
+              {t('nav_blockbench')}
+            </button>
           </nav>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -391,45 +400,54 @@ function AppContent({ activeTab }: { activeTab: 'dashboard' | 'head3d' | 'roblox
         </header>
 
         {/* Lazy loadable modules inside Suspense */}
-        <Suspense fallback={<LoadingSkeleton />}>
-          {activeModule === 'dashboard' && (
-            <DashboardView 
-              stats={stats} 
-              navigateToModule={navigateToModule} 
-            />
-          )}
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSkeleton />}>
+            {activeModule === 'dashboard' && (
+              <DashboardView 
+                stats={stats} 
+                navigateToModule={navigateToModule} 
+              />
+            )}
 
-          {activeModule === 'head3d' && (
-            <Head3DWorkspace 
-              skinImage={skinImage}
-              skinSrc={skinSrc}
-              extractedFaces={extractedFaces}
-              fileInputRef={fileInputRef}
-              handleFileChange={handleFileChange}
-              dragActive={dragActive}
-              handleDrag={handleDrag}
-              handleDrop={handleDrop}
-              triggerUploadClick={triggerUploadClick}
-              showToast={showToast}
-              logExport={logExport}
-            />
-          )}
+            {activeModule === 'head3d' && (
+              <Head3DWorkspace 
+                skinImage={skinImage}
+                skinSrc={skinSrc}
+                extractedFaces={extractedFaces}
+                fileInputRef={fileInputRef}
+                handleFileChange={handleFileChange}
+                dragActive={dragActive}
+                handleDrag={handleDrag}
+                handleDrop={handleDrop}
+                triggerUploadClick={triggerUploadClick}
+                showToast={showToast}
+                logExport={logExport}
+              />
+            )}
 
-          {activeModule === 'roblox' && (
-            <RobloxWorkspace 
-              skinImage={skinImage}
-              setSkinImage={setSkinImage}
-              fileInputRef={fileInputRef}
-              handleFileChange={handleFileChange}
-              dragActive={dragActive}
-              handleDrag={handleDrag}
-              handleDrop={handleDrop}
-              triggerUploadClick={triggerUploadClick}
-              showToast={showToast}
-              logExport={logExport}
-            />
-          )}
-        </Suspense>
+            {activeModule === 'roblox' && (
+              <RobloxWorkspace 
+                skinImage={skinImage}
+                setSkinImage={setSkinImage}
+                fileInputRef={fileInputRef}
+                handleFileChange={handleFileChange}
+                dragActive={dragActive}
+                handleDrag={handleDrag}
+                handleDrop={handleDrop}
+                triggerUploadClick={triggerUploadClick}
+                showToast={showToast}
+                logExport={logExport}
+              />
+            )}
+
+            {activeModule === 'blockbench' && (
+              <BlockbenchWorkspace 
+                showToast={showToast}
+                logExport={logExport}
+              />
+            )}
+          </Suspense>
+        </ErrorBoundary>
       </div>
       <AdColumn position="right" />
 

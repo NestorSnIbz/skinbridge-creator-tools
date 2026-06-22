@@ -97,6 +97,10 @@ export class ThreeViewer {
    * Set or update the 3D Head model in the scene.
    */
   public setHeadModel(newHeadGroup: THREE.Group) {
+    if (this.headGroup === newHeadGroup) {
+      return;
+    }
+
     // Remove existing head model
     if (this.headGroup) {
       this.scene.remove(this.headGroup);
