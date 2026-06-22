@@ -57,6 +57,23 @@ Convert the torso, arms, and legs of your Minecraft skin into official Roblox Cl
 
 ---
 
+## 🔗 Supabase Backend Configuration
+
+SkinBridge relies on Supabase for public sharing functionality, image uploads, and dashboard history feeds. All shared items are automatically configured to expire and delete after exactly 7 days.
+
+To set up the backend database and storage:
+1. **Create a Supabase Project:** Sign up at [supabase.com](https://supabase.com) and create a new project.
+2. **Execute Database Schema:** Navigate to the **SQL Editor** in your Supabase dashboard and run the entire script found in [supabase_schema.sql](file:///c:/minecraft-to-roblox-clothing-exporter/supabase_schema.sql).
+3. **Configure Storage:**
+   - Go to **Storage** and create a new bucket named `conversions`.
+   - Set the bucket to **Public** so anyone can view shared images.
+   - Add a storage policy for the `INSERT` operation to allow anonymous uploads (documented inside `supabase_schema.sql`).
+4. **Environment Variables:**
+   - Copy `.env.example` to a new file named `.env`.
+   - Replace the values of `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` with your project's credentials (found under Project Settings > API).
+
+---
+
 ## 💻 Local Installation and Development
 
 1. **Clone the repository:**
