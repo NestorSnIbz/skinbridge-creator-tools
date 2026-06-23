@@ -117,7 +117,7 @@ export function exportToFBX(_input: THREE.Object3D, skinImage: HTMLImageElement)
             },
           });
 
-          downloadBinaryFile(fbxBytes, 'cabeza.fbx');
+          downloadBinaryFile(fbxBytes, 'skinbridge_cabeza.fbx');
           resolve();
         } catch (exportError) {
           reject(exportError);

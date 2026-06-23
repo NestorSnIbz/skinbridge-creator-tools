@@ -248,7 +248,7 @@ export default function RobloxWorkspace({
     try {
       await exportRobloxShirt(skinImage, armType === 'slim');
       showToast('success', t('toast_shirt_success'));
-      logExport('Shirt', 'shirt.png');
+      logExport('Shirt', 'skinbridge_shirt.png');
     } catch (err: any) {
       showToast('error', t('toast_shirt_error', { error: err.message }));
     }
@@ -263,7 +263,7 @@ export default function RobloxWorkspace({
     try {
       await exportRobloxPants(skinImage);
       showToast('success', t('toast_pants_success'));
-      logExport('Pants', 'pants.png');
+      logExport('Pants', 'skinbridge_pants.png');
     } catch (err: any) {
       showToast('error', t('toast_pants_error', { error: err.message }));
     }

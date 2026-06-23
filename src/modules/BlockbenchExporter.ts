@@ -109,7 +109,8 @@ export function exportToOBJ(
 
       textures.forEach((tex) => {
         const matName = `mat_${tex.name || tex.id}`;
-        const texName = tex.name || `${tex.id}.png`;
+        const rawTexName = tex.name || `${tex.id}.png`;
+        const texName = `skinbridge_${rawTexName}`;
         
         mtlText += `newmtl ${matName}\n`;
         mtlText += `Ka 1.000 1.000 1.000\n`;

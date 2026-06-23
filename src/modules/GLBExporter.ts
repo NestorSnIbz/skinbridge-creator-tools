@@ -33,7 +33,7 @@ export function exportToGLB(input: THREE.Object3D): Promise<void> {
         try {
           if (gltf instanceof ArrayBuffer) {
             const blob = new Blob([gltf], { type: 'application/octet-stream' });
-            downloadBlob(blob, 'cabeza.glb');
+            downloadBlob(blob, 'skinbridge_cabeza.glb');
             resolve();
           } else {
             reject(new Error('Formato de exportación inválido (esperaba binario GLB).'));
