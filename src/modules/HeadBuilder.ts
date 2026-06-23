@@ -28,12 +28,13 @@ function setFaceUVs(
   coords: FaceUVCoords
 ) {
   const textureSize = 64;
+  const eps = 0.05; // safe inset to prevent floating-point precision from sampling adjacent transparent pixels
   
   // Calculate UV boundaries (WebGL coordinates: bottom-left is 0,0, top-right is 1,1)
-  const uMin = coords.x / textureSize;
-  const uMax = (coords.x + coords.w) / textureSize;
-  const vMin = (textureSize - (coords.y + coords.h)) / textureSize;
-  const vMax = (textureSize - coords.y) / textureSize;
+  const uMin = (coords.x + eps) / textureSize;
+  const uMax = (coords.x + coords.w - eps) / textureSize;
+  const vMin = (textureSize - (coords.y + coords.h) + eps) / textureSize;
+  const vMax = (textureSize - coords.y - eps) / textureSize;
 
   const startIdx = faceIndex * 4;
   
