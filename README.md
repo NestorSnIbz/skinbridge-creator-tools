@@ -2,7 +2,7 @@
 
 **SkinBridge** is a premium interactive web platform designed for creators. It allows you to transform Minecraft skins (64x64 px) into 3D models ready for editing software (such as Blender or Blockbench) and official **Roblox Classic** clothing templates (Shirt and Pants) with real-time 3D preview.
 
-🔗 **Official Website:** [https://minecraft-to-roblox-clothing-export.vercel.app/](https://minecraft-to-roblox-clothing-export.vercel.app/)
+🔗 **Official Website:** [https://skinbridge.vercel.app/](https://skinbridge.vercel.app/)
 
 ---
 

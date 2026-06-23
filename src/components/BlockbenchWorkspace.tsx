@@ -180,7 +180,7 @@ export default function BlockbenchWorkspace({ showToast, logExport }: Blockbench
         <meta name="description" content="Convert Minecraft skins and Blockbench bbmodel files to OBJ and FBX format. Optimize your models with physical alpha-cutout textures for Roblox." />
         <meta property="og:title" content="Minecraft Skin Blockbench Export &amp; Converter" />
         <meta property="og:description" content="Convert Minecraft skins and Blockbench bbmodel files to OBJ and FBX format." />
-        <link rel="canonical" href="https://minecraft-to-roblox-clothing-export.vercel.app/blockbench" />
+        <link rel="canonical" href="https://skinbridge.vercel.app/blockbench" />
       </Head>
       {/* Left Panel: Upload and model details */}
       <section className="glass-panel sidebar-panel">

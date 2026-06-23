@@ -27,6 +27,19 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "minecraft-to-roblox-clothing-export.vercel.app"
+        }
+      ],
+      "destination": "https://skinbridge.vercel.app/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/share/roblox/:slug",

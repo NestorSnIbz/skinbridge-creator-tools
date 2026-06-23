@@ -106,7 +106,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
         <meta name="description" content="Convert Minecraft skins to 3D blocky models and Roblox clothing templates in real-time. Export bbmodel to OBJ/FBX and view your skins dynamically." />
         <meta property="og:title" content="SkinBridge | Minecraft Skin to Roblox Converter" />
         <meta property="og:description" content="Convert Minecraft skins to 3D blocky models and Roblox clothing templates in real-time." />
-        <link rel="canonical" href="https://minecraft-to-roblox-clothing-export.vercel.app/" />
+        <link rel="canonical" href="https://skinbridge.vercel.app/" />
       </Head>
       {/* Welcome Area */}
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '8px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(129, 140, 248, 0.05) 100%)' }}>
