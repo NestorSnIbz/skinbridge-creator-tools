@@ -9,9 +9,9 @@
 ## 🌟 Key Features
 
 ### 1. Control Panel & Analytics (SaaS Dashboard)
-* **Centralized Entry Point:** A modern dashboard to explore available workspaces and monitor usage trends.
-* **Real-Time Metrics & Analytics:** Track skin conversions, exported files, your favorite format, and your most-used workspace.
-* **Dynamic Charts:** Interactive SVG pie chart displaying workspace distribution, and a horizontal bar chart showing the most popular export formats.
+* **Centralized Entry Point:** A modern dashboard to explore available workspaces (3D Head, Roblox Classic, and Blockbench Converter) and monitor usage trends.
+* **Real-Time Metrics & Analytics:** Track skin conversions, exported files, your favorite format, and your most-used workspace (including Blockbench).
+* **Dynamic Charts:** Interactive SVG pie chart displaying workspace distribution (including Blockbench usage trends), and a horizontal bar chart showing the most popular export formats (including OBJ and FBX).
 * **Recent Activity Log:** Chronological list of your last 5 actions (uploads, visits, and exports) with relative timestamps.
 * **Data Persistence:** All analytics and activity logs are automatically persisted locally via `localStorage`.
 
@@ -49,16 +49,18 @@ Convert the torso, arms, and legs of your Minecraft skin into official Roblox Cl
 * **Dynamic Language Switcher:** A header selector allows you to translate the entire UI in real-time without reloading the page.
 * **Preferences Storage:** Remembers your language preference across browser sessions.
 
-### 6. Responsive Ad Banners
-* **Sponsor Banner Columns (160x600 px):** Integrates "Wide Skyscraper" sponsor panels on the sides of the viewport, styled to match the frosted glass aesthetic of the app.
-* **Non-Intrusive Design:** Sidebar banners hide automatically using CSS media queries (`@media`) on screen widths below `1600px` to maximize space for 3D viewports on laptops and mobile devices.
-* **Session-Dismissible:** Banners feature a close button to permanently hide them during your session.
+### 6. Community Gallery (`/gallery`)
+* **Public Conversions Showcase:** A shared wall of creativity displaying skins, outfits, and 3D heads shared by the community in the last 7 days.
+* **Dynamic Data Sync:** Automatically pulls public shares from a Supabase view (`shares_all`).
+* **Responsive Cards Grid:** Displays detailed cards with creator names (`@username` or `@Anonymous`), relative times (e.g. "2 hours ago"), clamped descriptions, and direct share page links.
+* **Fallback Rendering:** Automatically displays pixelated 3D thumbnail renders, falling back gracefully to flat skin sheets if no preview exists.
 
 ---
 
 ## 🛠️ Technology Stack
 
-* **Framework:** React 19 + TypeScript + Vite
+* **Framework & SSG:** React 19 + TypeScript + Vite with `vite-react-ssg` static pre-rendering
+* **SEO & Metadata:** `react-helmet-async` for client & build-time dynamic HTML header metadata injection
 * **3D Graphics:** Three.js with OrbitControls, OBJExporter, GLTFExporter, and FBXExporter integrations
 * **Iconography:** Lucide React
 * **Styling:** Vanilla CSS with dynamic gradients and Glassmorphism
@@ -115,4 +117,4 @@ To set up the backend database and storage:
    ```bash
    npm run build
    ```
-   This compiles the project and generates optimized assets split into chunks on-demand inside the `dist/` directory.
+   This compiles the project and generates optimized assets and statically pre-rendered `.html` files for all static routes (index, dashboard, roblox, head3d, blockbench, gallery) inside the `dist/` directory, ready to be served under Vercel Clean URLs.
