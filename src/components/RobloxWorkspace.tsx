@@ -282,7 +282,7 @@ export default function RobloxWorkspace({
         <meta name="description" content="Convert Minecraft skins to Roblox clothing templates online. Generate classic Roblox shirts and pants with an interactive 3D R6 dummy preview." />
         <meta property="og:title" content="Minecraft Skin to Roblox Shirt Converter" />
         <meta property="og:description" content="Convert Minecraft skins to classic Roblox shirt and pants templates online." />
-        <link rel="canonical" href="https://minecraft-to-roblox-clothing-export.vercel.app/roblox" />
+        <link rel="canonical" href="https://skinbridge.vercel.app/roblox" />
       </Head>
       {/* Left Side: Uploading and 2D Previews */}
       <section className="glass-panel sidebar-panel">

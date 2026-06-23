@@ -74,7 +74,7 @@ export default function GalleryPage() {
         <meta name="description" content="Browse 3D heads, Roblox outfit templates, and character skins shared by the SkinBridge community in the last 7 days." />
         <meta property="og:title" content="Community Gallery | SkinBridge" />
         <meta property="og:description" content="Browse 3D heads, Roblox outfit templates, and character skins shared by the SkinBridge community in the last 7 days." />
-        <link rel="canonical" href="https://minecraft-to-roblox-clothing-export.vercel.app/gallery" />
+        <link rel="canonical" href="https://skinbridge.vercel.app/gallery" />
       </Head>
 
       <div className="app-container" style={{ flexGrow: 1, padding: '24px 0', maxWidth: '1200px', margin: '0 auto', width: '90%' }}>
