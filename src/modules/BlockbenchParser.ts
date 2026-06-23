@@ -330,6 +330,109 @@ function buildVoxelizedBoxGeometry(
 }
 
 /**
+ * Builds a customBufferGeometry for Blockbench 'mesh' type elements.
+ */
+function buildMeshGeometry(
+  el: any,
+  getTextureByRef: (ref: any) => BlockbenchTexture,
+  defaultMaterial: THREE.Material,
+  transparentMaterial: THREE.Material
+): { geometry: THREE.BufferGeometry; materials: THREE.Material[] } {
+  const facesList: any[] = [];
+  if (el.faces) {
+    for (const faceId in el.faces) {
+      const faceData = el.faces[faceId];
+      if (faceData) {
+        facesList.push(faceData);
+      }
+    }
+  }
+
+  const localMaterials: THREE.Material[] = [];
+  const textureToMatIndex = new Map<string, number>();
+
+  const getMaterialIndexForFace = (faceData: any): number => {
+    if (faceData.texture === undefined || faceData.texture === null) {
+      const idx = localMaterials.indexOf(transparentMaterial);
+      if (idx !== -1) return idx;
+      localMaterials.push(transparentMaterial);
+      return localMaterials.length - 1;
+    }
+    
+    const tex = getTextureByRef(faceData.texture);
+    const key = tex.id;
+    if (textureToMatIndex.has(key)) {
+      return textureToMatIndex.get(key)!;
+    }
+    const mat = tex.threeMaterial || defaultMaterial;
+    localMaterials.push(mat);
+    const idx = localMaterials.length - 1;
+    textureToMatIndex.set(key, idx);
+    return idx;
+  };
+
+  const facesByMatIndex = new Map<number, any[]>();
+  for (const face of facesList) {
+    const matIdx = getMaterialIndexForFace(face);
+    if (!facesByMatIndex.has(matIdx)) {
+      facesByMatIndex.set(matIdx, []);
+    }
+    facesByMatIndex.get(matIdx)!.push(face);
+  }
+
+  const positionsList: number[] = [];
+  const uvsList: number[] = [];
+  const groupOffsets: { start: number; count: number; materialIndex: number }[] = [];
+
+  let vertexCount = 0;
+
+  for (const [matIdx, faces] of facesByMatIndex.entries()) {
+    const groupStart = vertexCount;
+
+    for (const face of faces) {
+      const faceVertKeys = face.vertices || [];
+      if (faceVertKeys.length < 3) continue;
+
+      const tex = getTextureByRef(face.texture);
+      const texWidth = tex.width || 64;
+      const texHeight = tex.height || 64;
+
+      for (let i = 1; i < faceVertKeys.length - 1; i++) {
+        const keys = [faceVertKeys[0], faceVertKeys[i], faceVertKeys[i + 1]];
+
+        for (const key of keys) {
+          const pt = el.vertices[key] || [0, 0, 0];
+          positionsList.push(pt[0], pt[1], pt[2]);
+
+          const uv = (face.uv && face.uv[key]) || [0, 0];
+          uvsList.push(uv[0] / texWidth, 1.0 - (uv[1] / texHeight));
+
+          vertexCount++;
+        }
+      }
+    }
+
+    const groupCount = vertexCount - groupStart;
+    if (groupCount > 0) {
+      groupOffsets.push({ start: groupStart, count: groupCount, materialIndex: matIdx });
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionsList, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvsList, 2));
+
+  geometry.computeVertexNormals();
+
+  for (const group of groupOffsets) {
+    geometry.addGroup(group.start, group.count, group.materialIndex);
+  }
+
+  return { geometry, materials: localMaterials };
+}
+
+
+/**
  * Scales an image up to 1024x1024 using Nearest-Neighbor interpolation on a canvas.
  */
 function scaleImageTo1024(image: HTMLImageElement): Promise<HTMLImageElement> {
@@ -524,10 +627,9 @@ export async function parseBlockbenchModel(jsonText: string): Promise<ParsedBloc
 
     // Skip locators/cameras/helpers that don't have any textured faces
     let hasTexturedFace = false;
-    const faceOrderCheck = ['east', 'west', 'up', 'down', 'south', 'north'];
     if (el.faces) {
-      for (const faceKey of faceOrderCheck) {
-        const faceData = el.faces[faceKey];
+      for (const faceId in el.faces) {
+        const faceData = el.faces[faceId];
         if (faceData && faceData.texture !== undefined && faceData.texture !== null) {
           hasTexturedFace = true;
           break;
@@ -538,58 +640,67 @@ export async function parseBlockbenchModel(jsonText: string): Promise<ParsedBloc
       continue;
     }
 
-    const from = el.from || [0, 0, 0];
-    const to = el.to || [1, 1, 1];
     const origin = el.origin || [0, 0, 0];
     const rotation = el.rotation || [0, 0, 0];
 
-    // Compute dimensions
-    const width = Math.abs(to[0] - from[0]);
-    const height = Math.abs(to[1] - from[1]);
-    const depth = Math.abs(to[2] - from[2]);
+    let geometry: THREE.BufferGeometry;
+    let materials: THREE.Material[];
 
-    const geometry = buildVoxelizedBoxGeometry(width, height, depth, el.faces, getTextureByRef);
+    if (el.type === 'mesh') {
+      const meshData = buildMeshGeometry(el, getTextureByRef, parsedTextures[0].threeMaterial!, transparentMaterial);
+      geometry = meshData.geometry;
+      materials = meshData.materials;
+    } else {
+      const from = el.from || [0, 0, 0];
+      const to = el.to || [1, 1, 1];
+      const width = Math.abs(to[0] - from[0]);
+      const height = Math.abs(to[1] - from[1]);
+      const depth = Math.abs(to[2] - from[2]);
 
-    // Blockbench coordinates: center is mid-point
-    const centerX = (from[0] + to[0]) / 2;
-    const centerY = (from[1] + to[1]) / 2;
-    const centerZ = (from[2] + to[2]) / 2;
+      geometry = buildVoxelizedBoxGeometry(width, height, depth, el.faces, getTextureByRef);
 
-    // Define 6 face materials in standard Three.js order:
-    // +X (East), -X (West), +Y (Up), -Y (Down), +Z (South), -Z (North)
-    const faceOrder = [
-      { key: 'east', idx: 0 },
-      { key: 'west', idx: 1 },
-      { key: 'up', idx: 2 },
-      { key: 'down', idx: 3 },
-      { key: 'south', idx: 4 },
-      { key: 'north', idx: 5 }
-    ];
+      const faceOrder = [
+        { key: 'east', idx: 0 },
+        { key: 'west', idx: 1 },
+        { key: 'up', idx: 2 },
+        { key: 'down', idx: 3 },
+        { key: 'south', idx: 4 },
+        { key: 'north', idx: 5 }
+      ];
 
-    const materials: THREE.Material[] = [];
-
-    for (const faceInfo of faceOrder) {
-      const faceData = el.faces ? el.faces[faceInfo.key] : null;
-      if (faceData && faceData.texture !== undefined && faceData.texture !== null) {
-        const tex = getTextureByRef(faceData.texture);
-        materials.push(tex.threeMaterial || parsedTextures[0].threeMaterial!);
-      } else {
-        materials.push(transparentMaterial);
+      materials = [];
+      for (const faceInfo of faceOrder) {
+        const faceData = el.faces ? el.faces[faceInfo.key] : null;
+        if (faceData && faceData.texture !== undefined && faceData.texture !== null) {
+          const tex = getTextureByRef(faceData.texture);
+          materials.push(tex.threeMaterial || parsedTextures[0].threeMaterial!);
+        } else {
+          materials.push(transparentMaterial);
+        }
       }
     }
 
     // Create mesh
     const mesh = new THREE.Mesh(geometry, materials);
-    mesh.name = el.name || `cube_${i}`;
+    mesh.name = el.name || `element_${i}`;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
     // Set position relative to rotation pivot (origin)
-    mesh.position.set(
-      centerX - origin[0],
-      centerY - origin[1],
-      centerZ - origin[2]
-    );
+    if (el.type === 'mesh') {
+      mesh.position.set(0, 0, 0);
+    } else {
+      const from = el.from || [0, 0, 0];
+      const to = el.to || [1, 1, 1];
+      const centerX = (from[0] + to[0]) / 2;
+      const centerY = (from[1] + to[1]) / 2;
+      const centerZ = (from[2] + to[2]) / 2;
+      mesh.position.set(
+        centerX - origin[0],
+        centerY - origin[1],
+        centerZ - origin[2]
+      );
+    }
 
     // Create rotation pivot group
     const pivot = new THREE.Group();
