@@ -371,6 +371,174 @@ export function isSlimSkin(skinImage: HTMLImageElement | HTMLCanvasElement): boo
  * Composites base layer + overlay layer for pixel-perfect accuracy.
  * Automatically detects and handles Slim (3px) and Classic (4px) arm textures.
  */
+/**
+ * Draws a pixelated/square watermark "skinbridge.vercel.app" in the bottom-right corner of the template (empty area).
+ */
+function drawWatermark(ctx: CanvasRenderingContext2D) {
+  const text = 'skinbridge.vercel.app';
+  const scale = 2;
+  const charWidth = 3;
+  const charHeight = 5;
+  const spacing = 1;
+  const textWidth = text.length * (charWidth + spacing) - spacing; // 21 * 4 - 1 = 83
+  const pixelWidth = textWidth * scale; // 166
+  const pixelHeight = charHeight * scale; // 10
+  
+  // Placement in empty bottom-right region (with 15px margin from bottom and right)
+  const startX = TEMPLATE_WIDTH - pixelWidth - 15;
+  const startY = TEMPLATE_HEIGHT - pixelHeight - 15;
+
+  const font: Record<string, string[]> = {
+    'a': [
+      '###',
+      '# #',
+      '###',
+      '# #',
+      '# #'
+    ],
+    'b': [
+      '## ',
+      '# #',
+      '## ',
+      '# #',
+      '## '
+    ],
+    'c': [
+      '###',
+      '#  ',
+      '#  ',
+      '#  ',
+      '###'
+    ],
+    'd': [
+      '## ',
+      '# #',
+      '# #',
+      '# #',
+      '## '
+    ],
+    'e': [
+      '###',
+      '#  ',
+      '## ',
+      '#  ',
+      '###'
+    ],
+    'g': [
+      '###',
+      '#  ',
+      '# #',
+      '# #',
+      '###'
+    ],
+    'i': [
+      '###',
+      ' # ',
+      ' # ',
+      ' # ',
+      '###'
+    ],
+    'k': [
+      '# #',
+      '## ',
+      '#  ',
+      '## ',
+      '# #'
+    ],
+    'l': [
+      '#  ',
+      '#  ',
+      '#  ',
+      '#  ',
+      '###'
+    ],
+    'n': [
+      '###',
+      '# #',
+      '# #',
+      '# #',
+      '# #'
+    ],
+    'p': [
+      '###',
+      '# #',
+      '###',
+      '#  ',
+      '#  '
+    ],
+    'r': [
+      '## ',
+      '# #',
+      '## ',
+      '# #',
+      '# #'
+    ],
+    's': [
+      '###',
+      '#  ',
+      '###',
+      '  #',
+      '###'
+    ],
+    'v': [
+      '# #',
+      '# #',
+      '# #',
+      '# #',
+      ' # '
+    ],
+    '.': [
+      '   ',
+      '   ',
+      '   ',
+      '   ',
+      ' # '
+    ]
+  };
+
+  const drawPass = (color: string, offsetX: number, offsetY: number) => {
+    ctx.fillStyle = color;
+    let curX = startX + offsetX;
+    const curY = startY + offsetY;
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const glyph = font[char];
+      if (glyph) {
+        for (let r = 0; r < charHeight; r++) {
+          const row = glyph[r];
+          for (let c = 0; c < charWidth; c++) {
+            if (row[c] === '#') {
+              ctx.fillRect(curX + c * scale, curY + r * scale, scale, scale);
+            }
+          }
+        }
+      }
+      curX += (charWidth + spacing) * scale;
+    }
+  };
+
+  // Draw black outline shadow
+  const outlineOffset = 1;
+  const outlineOffsets = [
+    [-outlineOffset, 0],
+    [outlineOffset, 0],
+    [0, -outlineOffset],
+    [0, outlineOffset],
+    [-outlineOffset, -outlineOffset],
+    [-outlineOffset, outlineOffset],
+    [outlineOffset, -outlineOffset],
+    [outlineOffset, outlineOffset]
+  ];
+
+  for (const [ox, oy] of outlineOffsets) {
+    drawPass('rgba(0, 0, 0, 0.8)', ox, oy);
+  }
+
+  // Draw main text in white
+  drawPass('rgba(255, 255, 255, 0.9)', 0, 0);
+}
+
 export function generateRobloxShirtCanvas(skinImage: HTMLImageElement | HTMLCanvasElement, isSlimOverride?: boolean): HTMLCanvasElement {
   const skinData = getSkinPixels(skinImage);
   const isSlim = isSlimOverride !== undefined ? isSlimOverride : detectIsSlimSkin(skinData);
@@ -405,6 +573,9 @@ export function generateRobloxShirtCanvas(skinImage: HTMLImageElement | HTMLCanv
   mapBodyPart(ctx, skinData, rightArmOverlay, ROBLOX_RIGHT_LIMB);
   // Left Arm overlay (left sleeve)
   mapBodyPart(ctx, skinData, leftArmOverlay, ROBLOX_LEFT_LIMB);
+
+  // Add the watermark url
+  drawWatermark(ctx);
 
   return canvas;
 }
@@ -444,6 +615,9 @@ export function generateRobloxPantsCanvas(skinImage: HTMLImageElement | HTMLCanv
   // Left Leg overlay
   mapBodyPart(ctx, skinData, MC_LEFT_LEG_OVERLAY, ROBLOX_LEFT_LIMB);
 
+  // Add the watermark url
+  drawWatermark(ctx);
+
   return canvas;
 }
 
@@ -452,7 +626,7 @@ export function generateRobloxPantsCanvas(skinImage: HTMLImageElement | HTMLCanv
  */
 export function exportRobloxShirt(skinImage: HTMLImageElement | HTMLCanvasElement, isSlimOverride?: boolean): Promise<void> {
   const canvas = generateRobloxShirtCanvas(skinImage, isSlimOverride);
-  return downloadCanvasAsPNG(canvas, 'shirt.png');
+  return downloadCanvasAsPNG(canvas, 'skinbridge_shirt.png');
 }
 
 /**
@@ -460,7 +634,7 @@ export function exportRobloxShirt(skinImage: HTMLImageElement | HTMLCanvasElemen
  */
 export function exportRobloxPants(skinImage: HTMLImageElement | HTMLCanvasElement): Promise<void> {
   const canvas = generateRobloxPantsCanvas(skinImage);
-  return downloadCanvasAsPNG(canvas, 'pants.png');
+  return downloadCanvasAsPNG(canvas, 'skinbridge_pants.png');
 }
 
 /**

@@ -183,7 +183,7 @@ export default function Head3DWorkspace({
     try {
       await exportToOBJ(headModel, skinImage);
       showToast('success', t('toast_obj_success'));
-      logExport('OBJ', 'cabeza.obj');
+      logExport('OBJ', 'skinbridge_cabeza.obj');
     } catch (err: any) {
       showToast('error', t('toast_obj_error', { error: err.message }));
     }
@@ -203,7 +203,7 @@ export default function Head3DWorkspace({
     try {
       await exportToFBX(headModel, skinImage);
       showToast('success', t('toast_fbx_success'));
-      logExport('FBX', 'cabeza.fbx');
+      logExport('FBX', 'skinbridge_cabeza.fbx');
     } catch (err: any) {
       showToast('error', t('toast_fbx_error', { error: err.message }));
     }
@@ -220,7 +220,7 @@ export default function Head3DWorkspace({
     try {
       await exportToGLB(headModel);
       showToast('success', t('toast_glb_success'));
-      logExport('GLB', 'cabeza.glb');
+      logExport('GLB', 'skinbridge_cabeza.glb');
     } catch (err: any) {
       showToast('error', t('toast_glb_error', { error: err.message }));
     }
@@ -235,7 +235,7 @@ export default function Head3DWorkspace({
     try {
       exportToBBModel(skinImage);
       showToast('success', t('toast_bbmodel_success'));
-      logExport('BBMODEL', 'cabeza.bbmodel');
+      logExport('BBMODEL', 'skinbridge_cabeza.bbmodel');
     } catch (err: any) {
       showToast('error', t('toast_bbmodel_error', { error: err.message }));
     }

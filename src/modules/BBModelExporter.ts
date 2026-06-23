@@ -142,5 +142,5 @@ export function exportToBBModel(skinImage: HTMLImageElement) {
   };
 
   const jsonString = JSON.stringify(bbmodel, null, 2);
-  downloadBBModelFile(jsonString, 'cabeza.bbmodel');
+  downloadBBModelFile(jsonString, 'skinbridge_cabeza.bbmodel');
 }

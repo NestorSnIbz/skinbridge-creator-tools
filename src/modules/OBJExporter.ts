@@ -519,8 +519,8 @@ export function exportToOBJ(_input: THREE.Object3D, skinImage: HTMLImageElement)
       const exporter = new ThreeOBJExporter();
       const rawObj = exporter.parse(exportGroup);
       
-      // Prepend the mtllib reference so importers can find cabeza.mtl
-      const objText = `mtllib cabeza.mtl\n${rawObj}`;
+      // Prepend the mtllib reference so importers can find skinbridge_cabeza.mtl
+      const objText = `mtllib skinbridge_cabeza.mtl\n${rawObj}`;
       
       // Generate MTL content with proper material definitions
       const mtlText = `# Minecraft Head - Material Template Library
@@ -533,7 +533,7 @@ Ks 0.000 0.000 0.000
 Ns 10.000
 d 1.000
 illum 2
-map_Kd textura.png
+map_Kd skinbridge_textura.png
 
 newmtl OverlayMaterial
 Ka 1.000 1.000 1.000
@@ -542,18 +542,18 @@ Ks 0.000 0.000 0.000
 Ns 10.000
 d 1.000
 illum 2
-map_Kd textura.png
+map_Kd skinbridge_textura.png
 `;
 
       // Download all three files with small delays to avoid browser blocking
-      downloadTextFile(objText, 'cabeza.obj', 'text/plain');
+      downloadTextFile(objText, 'skinbridge_cabeza.obj', 'text/plain');
       
       setTimeout(() => {
-        downloadTextFile(mtlText, 'cabeza.mtl', 'text/plain');
+        downloadTextFile(mtlText, 'skinbridge_cabeza.mtl', 'text/plain');
       }, 200);
 
       setTimeout(async () => {
-        await downloadSkinImage(skinImage, 'textura.png');
+        await downloadSkinImage(skinImage, 'skinbridge_textura.png');
         resolve();
       }, 400);
 

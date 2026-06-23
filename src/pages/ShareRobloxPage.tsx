@@ -193,7 +193,7 @@ export default function ShareRobloxPage() {
                 <button 
                   className="glow-btn-roblox" 
                   style={{ width: '100%', padding: '10px' }} 
-                  onClick={() => handleDownload(data.shirt_url, 'shirt.png', setDownloadingShirt)}
+                  onClick={() => handleDownload(data.shirt_url, 'skinbridge_shirt.png', setDownloadingShirt)}
                   disabled={downloadingShirt}
                 >
                   <Download size={16} /> {downloadingShirt ? 'Downloading...' : t('btn_download_shirt')}
@@ -209,7 +209,7 @@ export default function ShareRobloxPage() {
                 <button 
                   className="glow-btn-roblox" 
                   style={{ width: '100%', padding: '10px' }} 
-                  onClick={() => handleDownload(data.pants_url, 'pants.png', setDownloadingPants)}
+                  onClick={() => handleDownload(data.pants_url, 'skinbridge_pants.png', setDownloadingPants)}
                   disabled={downloadingPants}
                 >
                   <Download size={16} /> {downloadingPants ? 'Downloading...' : t('btn_download_pants')}

@@ -154,9 +154,9 @@ export default function BlockbenchWorkspace({ showToast, logExport }: Blockbench
   const handleExportOBJ = async () => {
     if (!model) return;
     try {
-      await exportToOBJ(model.group, model.textures, filenamePrefix);
+      await exportToOBJ(model.group, model.textures, `skinbridge_${filenamePrefix}`);
       showToast('success', t('toast_bb_export_success'));
-      logExport('OBJ', `${filenamePrefix}.obj`);
+      logExport('OBJ', `skinbridge_${filenamePrefix}.obj`);
     } catch (err: any) {
       showToast('error', t('toast_bb_export_error', { error: err.message || err }));
     }
@@ -165,9 +165,9 @@ export default function BlockbenchWorkspace({ showToast, logExport }: Blockbench
   const handleExportFBX = async () => {
     if (!model) return;
     try {
-      await exportToFBX(model.group, filenamePrefix);
+      await exportToFBX(model.group, `skinbridge_${filenamePrefix}`);
       showToast('success', t('toast_bb_export_success'));
-      logExport('FBX', `${filenamePrefix}.fbx`);
+      logExport('FBX', `skinbridge_${filenamePrefix}.fbx`);
     } catch (err: any) {
       showToast('error', t('toast_bb_export_error', { error: err.message || err }));
     }
