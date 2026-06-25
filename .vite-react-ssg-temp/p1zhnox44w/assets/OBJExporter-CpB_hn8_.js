@@ -22,10 +22,10 @@ function setFaceUVs(uvAttribute, faceIndex, coords) {
 		uvAttribute.setXY(startIdx + 2, uMin, vMin);
 		uvAttribute.setXY(startIdx + 3, uMax, vMin);
 	} else if (faceIndex === 3) {
-		uvAttribute.setXY(startIdx, uMax, vMin);
-		uvAttribute.setXY(startIdx + 1, uMin, vMin);
-		uvAttribute.setXY(startIdx + 2, uMax, vMax);
-		uvAttribute.setXY(startIdx + 3, uMin, vMax);
+		uvAttribute.setXY(startIdx, uMin, vMin);
+		uvAttribute.setXY(startIdx + 1, uMax, vMin);
+		uvAttribute.setXY(startIdx + 2, uMin, vMax);
+		uvAttribute.setXY(startIdx + 3, uMax, vMax);
 	} else {
 		uvAttribute.setXY(startIdx, uMin, vMax);
 		uvAttribute.setXY(startIdx + 1, uMax, vMax);
@@ -1379,7 +1379,7 @@ function buildBaseHead(skinImage) {
 				geom.rotateX(Math.PI / 2);
 			},
 			getPos: (col, row) => ({
-				x: gridOffset - col * pixelSize,
+				x: -3.5 + col * pixelSize,
 				y: -4,
 				z: -3.5 + row * pixelSize
 			})
@@ -1559,7 +1559,7 @@ function buildVoxelizedOverlay(skinImage, heightmap) {
 			getPos: (col, row, thickness, pixelOffset) => {
 				const d = thickness > 0 ? pixelOffset + thickness / 2 : flatOffset;
 				return {
-					x: gridOffset - col * pixelSize,
+					x: -3.9375 + col * pixelSize,
 					y: -d,
 					z: -3.9375 + row * pixelSize
 				};

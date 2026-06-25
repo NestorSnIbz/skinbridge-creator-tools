@@ -281,7 +281,7 @@ export function buildBaseHead(skinImage: HTMLImageElement): THREE.Group {
         geom.rotateX(Math.PI / 2);
       },
       getPos: (col: number, row: number) => ({
-        x: gridOffset - col * pixelSize,
+        x: -gridOffset + col * pixelSize,
         y: -offset,
         z: -gridOffset + row * pixelSize
       })
@@ -483,7 +483,7 @@ export function buildVoxelizedOverlay(
       getPos: (col: number, row: number, thickness: number, pixelOffset: number) => {
         const d = thickness > 0 ? (pixelOffset + thickness / 2) : flatOffset;
         return {
-          x: gridOffset - col * pixelSize,
+          x: -gridOffset + col * pixelSize,
           y: -d,
           z: -gridOffset + row * pixelSize
         };

@@ -49,15 +49,15 @@ function setFaceUVs(
     // Vertex 3 (Bottom-Right of face: front-right)
     uvAttribute.setXY(startIdx + 3, uMax, vMin);
   } else if (faceIndex === 3) {
-    // Bottom face: vertically flipped AND horizontally mirrored to match standard Minecraft skin layout orientation
+    // Bottom face: keep left/right orientation and mirror only top/bottom.
     // Vertex 0 (Top-Left of face: bottom-left-front)
-    uvAttribute.setXY(startIdx, uMax, vMin);
+    uvAttribute.setXY(startIdx, uMin, vMin);
     // Vertex 1 (Top-Right of face: bottom-right-front)
-    uvAttribute.setXY(startIdx + 1, uMin, vMin);
+    uvAttribute.setXY(startIdx + 1, uMax, vMin);
     // Vertex 2 (Bottom-Left of face: bottom-left-back)
-    uvAttribute.setXY(startIdx + 2, uMax, vMax);
+    uvAttribute.setXY(startIdx + 2, uMin, vMax);
     // Vertex 3 (Bottom-Right of face: bottom-right-back)
-    uvAttribute.setXY(startIdx + 3, uMin, vMax);
+    uvAttribute.setXY(startIdx + 3, uMax, vMax);
   } else {
     // All other faces: standard mapping
     // Vertex 0 (Top-Left of face)
