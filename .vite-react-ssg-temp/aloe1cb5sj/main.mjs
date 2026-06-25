@@ -1781,9 +1781,9 @@ var ErrorBoundary = class extends Component {
 };
 //#endregion
 //#region src/App.tsx
-var Head3DWorkspace = lazy(() => import("./assets/Head3DWorkspace-DVlb5wl7.js"));
+var Head3DWorkspace = lazy(() => import("./assets/Head3DWorkspace-CqpICaGG.js"));
 var RobloxWorkspace = lazy(() => import("./assets/RobloxWorkspace-BrAf5j-v.js"));
-var BlockbenchWorkspace = lazy(() => import("./assets/BlockbenchWorkspace-JMhX_PBE.js"));
+var BlockbenchWorkspace = lazy(() => import("./assets/BlockbenchWorkspace-CLp30DYY.js"));
 var ShareRobloxPage = lazy(() => import("./assets/ShareRobloxPage-BqrZsEK_.js"));
 var ShareHead3dPage = lazy(() => import("./assets/ShareHead3dPage-BARK7EG4.js"));
 var GalleryPage = lazy(() => import("./assets/GalleryPage-BtDG_Qtq.js"));

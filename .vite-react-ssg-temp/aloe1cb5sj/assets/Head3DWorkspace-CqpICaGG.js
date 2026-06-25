@@ -1,5 +1,5 @@
 import { n as useTranslation, t as supabase } from "../main.mjs";
-import { a as exportToOBJClassic, i as dilateTexture, n as buildReliefExportGroup, o as exportToOBJWithRelief, r as buildVoxelizedOverlay, s as build3DHead, t as buildBaseHead } from "./OBJExporter-AdDLe9Up.js";
+import { a as exportToOBJClassic, c as buildVoxelizedOverlayWithRelief, i as dilateTexture, n as buildReliefExportGroup, o as exportToOBJWithRelief, r as buildVoxelizedOverlay, s as build3DHead, t as buildBaseHead } from "./OBJExporter-HRuoZEqT.js";
 import { t as ThreeViewer } from "./ThreeViewer-CRwfpc2W.js";
 import { n as checkRateLimit, t as RateLimitError } from "./rateLimit-BgQdUSFi.js";
 import { Head } from "vite-react-ssg";
@@ -24,17 +24,7 @@ function downloadBlob(blob, filename) {
 	document.body.removeChild(link);
 	URL.revokeObjectURL(link.href);
 }
-/**
-* Exports a Three.js Object3D (e.g. the Head group) to a binary GLB file.
-* If skinImage is provided, it rebuilds a pixel-perfect voxelized head with dilated textures,
-* supporting custom voxel relief heights if a heightmap is provided.
-* 
-* @param input The THREE.Object3D (head group) to export (used if skinImage is not provided)
-* @param skinImage Optional HTMLImageElement containing the skin to rebuild voxelized geometry
-* @param heightmap Optional heightmap for the overlay relief
-* @returns Promise that resolves when the export triggers download
-*/
-function applyExportMaterials$1(group, texture) {
+function applyClassicGlbMaterials(group, texture) {
 	group.traverse((child) => {
 		if (!(child instanceof THREE.Mesh)) return;
 		const isOverlay = child.name !== "Head";
@@ -49,165 +39,176 @@ function applyExportMaterials$1(group, texture) {
 		child.material.name = isOverlay ? "OverlayMaterial" : "HeadMaterial";
 	});
 }
+function convertClassicUvsToGlbSpace(group) {
+	group.traverse((child) => {
+		if (!(child instanceof THREE.Mesh) || !child.geometry) return;
+		const uvAttr = child.geometry.getAttribute("uv");
+		if (!uvAttr || !(uvAttr instanceof THREE.BufferAttribute)) return;
+		for (let i = 0; i < uvAttr.count; i++) uvAttr.setY(i, 1 - uvAttr.getY(i));
+		uvAttr.needsUpdate = true;
+	});
+}
+function createClassicGlbTexture(skinImage) {
+	return new Promise((resolve, reject) => {
+		const canvas = document.createElement("canvas");
+		canvas.width = 1024;
+		canvas.height = 1024;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			reject(/* @__PURE__ */ new Error("No se pudo crear el contexto 2D para la textura GLB."));
+			return;
+		}
+		const tempCanvas = document.createElement("canvas");
+		tempCanvas.width = 64;
+		tempCanvas.height = 64;
+		const tempCtx = tempCanvas.getContext("2d");
+		tempCtx.drawImage(skinImage, 0, 0, 64, 64, 0, 0, 64, 64);
+		const dilatedData = dilateTexture(tempCtx.getImageData(0, 0, 64, 64));
+		tempCtx.putImageData(dilatedData, 0, 0);
+		ctx.imageSmoothingEnabled = false;
+		ctx.drawImage(tempCanvas, 0, 0, 64, 64, 0, 0, 1024, 1024);
+		const texture = new THREE.CanvasTexture(canvas);
+		texture.name = "textura.png";
+		texture.minFilter = THREE.NearestFilter;
+		texture.magFilter = THREE.NearestFilter;
+		texture.generateMipmaps = false;
+		texture.colorSpace = THREE.SRGBColorSpace;
+		texture.flipY = false;
+		texture.needsUpdate = true;
+		resolve(texture);
+	});
+}
+function finalizeClassicGlbExport(group) {
+	return new Promise((resolve, reject) => {
+		new GLTFExporter().parse(group, (gltf) => {
+			try {
+				if (gltf instanceof ArrayBuffer) {
+					downloadBlob(new Blob([gltf], { type: "application/octet-stream" }), "skinbridge_cabeza.glb");
+					resolve();
+				} else reject(/* @__PURE__ */ new Error("Formato de exportación inválido (esperaba binario GLB)."));
+			} catch (err) {
+				reject(err);
+			}
+		}, (error) => {
+			reject(error);
+		}, {
+			binary: true,
+			animations: [],
+			includeCustomExtensions: true
+		});
+	});
+}
 function exportToGLBClassic(input, skinImage) {
 	return new Promise((resolve, reject) => {
-		const parseAndDownload = (objectToExport) => {
-			new GLTFExporter().parse(objectToExport, (gltf) => {
-				try {
-					if (gltf instanceof ArrayBuffer) {
-						downloadBlob(new Blob([gltf], { type: "application/octet-stream" }), "skinbridge_cabeza.glb");
-						resolve();
-					} else reject(/* @__PURE__ */ new Error("Formato de exportación inválido (esperaba binario GLB)."));
-				} catch (err) {
-					reject(err);
-				}
-			}, (error) => {
-				reject(error);
-			}, {
-				binary: true,
-				animations: [],
-				includeCustomExtensions: true
-			});
-		};
-		if (skinImage) try {
-			const canvas = document.createElement("canvas");
-			canvas.width = 1024;
-			canvas.height = 1024;
-			const ctx = canvas.getContext("2d");
-			if (!ctx) {
-				reject(/* @__PURE__ */ new Error("No se pudo crear el contexto 2D para la textura GLB."));
-				return;
-			}
-			const tempCanvas = document.createElement("canvas");
-			tempCanvas.width = 64;
-			tempCanvas.height = 64;
-			const tempCtx = tempCanvas.getContext("2d");
-			tempCtx.drawImage(skinImage, 0, 0, 64, 64, 0, 0, 64, 64);
-			const dilatedData = dilateTexture(tempCtx.getImageData(0, 0, 64, 64));
-			tempCtx.putImageData(dilatedData, 0, 0);
-			ctx.imageSmoothingEnabled = false;
-			ctx.drawImage(tempCanvas, 0, 0, 64, 64, 0, 0, 1024, 1024);
-			const skinDataUrl = canvas.toDataURL("image/png");
-			const img = new Image();
-			img.onload = () => {
-				try {
-					const texture = new THREE.Texture(img);
-					texture.name = "textura.png";
-					texture.minFilter = THREE.NearestFilter;
-					texture.magFilter = THREE.NearestFilter;
-					texture.generateMipmaps = false;
-					texture.colorSpace = THREE.SRGBColorSpace;
-					texture.needsUpdate = true;
-					const exportGroup = new THREE.Group();
-					exportGroup.name = "MinecraftHead";
-					const voxelizedHead = buildBaseHead(skinImage);
-					voxelizedHead.name = "HeadVoxelized";
-					voxelizedHead.traverse((child) => {
-						if (child instanceof THREE.Mesh) {
-							child.material = new THREE.MeshStandardMaterial({
-								map: texture,
-								roughness: .6,
-								metalness: .1,
-								side: THREE.DoubleSide
-							});
-							child.material.name = "HeadMaterial";
-						}
-					});
-					exportGroup.add(voxelizedHead);
-					const voxelizedOverlay = buildVoxelizedOverlay(skinImage);
-					voxelizedOverlay.name = "HeadOverlayVoxelized";
-					voxelizedOverlay.traverse((child) => {
-						if (child instanceof THREE.Mesh) {
-							child.material = new THREE.MeshStandardMaterial({
-								map: texture,
-								roughness: .6,
-								metalness: .1,
-								side: THREE.DoubleSide,
-								transparent: true,
-								alphaTest: .1
-							});
-							child.material.name = "OverlayMaterial";
-						}
-					});
-					exportGroup.add(voxelizedOverlay);
-					parseAndDownload(exportGroup);
-				} catch (exportError) {
-					reject(exportError);
-				}
-			};
-			img.onerror = () => {
-				reject(/* @__PURE__ */ new Error("No se pudo cargar la imagen de la textura escalada para GLB."));
-			};
-			img.src = skinDataUrl;
-		} catch (err) {
-			reject(err);
+		if (skinImage) createClassicGlbTexture(skinImage).then((texture) => {
+			const exportGroup = new THREE.Group();
+			exportGroup.name = "MinecraftHead";
+			const voxelizedHead = buildBaseHead(skinImage);
+			voxelizedHead.name = "HeadVoxelized";
+			exportGroup.add(voxelizedHead);
+			const voxelizedOverlay = buildVoxelizedOverlay(skinImage);
+			voxelizedOverlay.name = "HeadOverlayVoxelized";
+			exportGroup.add(voxelizedOverlay);
+			applyClassicGlbMaterials(exportGroup, texture);
+			convertClassicUvsToGlbSpace(exportGroup);
+			return finalizeClassicGlbExport(exportGroup);
+		}).then(() => resolve()).catch(reject);
+		else finalizeClassicGlbExport(input).then(() => resolve()).catch(reject);
+	});
+}
+function createReliefGlbTexture(skinImage) {
+	return new Promise((resolve, reject) => {
+		const canvas = document.createElement("canvas");
+		canvas.width = 1024;
+		canvas.height = 1024;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			reject(/* @__PURE__ */ new Error("No se pudo crear el contexto 2D para la textura GLB con relieve."));
+			return;
 		}
-		else parseAndDownload(input);
+		const tempCanvas = document.createElement("canvas");
+		tempCanvas.width = 64;
+		tempCanvas.height = 64;
+		const tempCtx = tempCanvas.getContext("2d");
+		tempCtx.drawImage(skinImage, 0, 0, 64, 64, 0, 0, 64, 64);
+		const dilatedData = dilateTexture(tempCtx.getImageData(0, 0, 64, 64));
+		tempCtx.putImageData(dilatedData, 0, 0);
+		ctx.imageSmoothingEnabled = false;
+		ctx.drawImage(tempCanvas, 0, 0, 64, 64, 0, 0, 1024, 1024);
+		const texture = new THREE.CanvasTexture(canvas);
+		texture.name = "textura_relieve.png";
+		texture.minFilter = THREE.NearestFilter;
+		texture.magFilter = THREE.NearestFilter;
+		texture.generateMipmaps = false;
+		texture.colorSpace = THREE.SRGBColorSpace;
+		texture.flipY = false;
+		texture.needsUpdate = true;
+		resolve(texture);
+	});
+}
+function buildReliefGlbExportGroup(skinImage, heightmap) {
+	const exportGroup = new THREE.Group();
+	exportGroup.name = "MinecraftHead";
+	const voxelizedHead = buildBaseHead(skinImage);
+	voxelizedHead.name = "HeadVoxelizedReliefGLB";
+	exportGroup.add(voxelizedHead);
+	const reliefOverlay = buildVoxelizedOverlayWithRelief(skinImage, heightmap);
+	reliefOverlay.name = "HeadOverlayReliefGLB";
+	exportGroup.add(reliefOverlay);
+	return exportGroup;
+}
+function applyReliefGlbMaterials(group, texture) {
+	group.traverse((child) => {
+		if (!(child instanceof THREE.Mesh)) return;
+		const isOverlay = child.name !== "Head";
+		child.material = new THREE.MeshStandardMaterial({
+			map: texture,
+			roughness: .6,
+			metalness: .1,
+			side: THREE.DoubleSide,
+			transparent: isOverlay,
+			alphaTest: isOverlay ? .1 : 0
+		});
+		child.material.name = isOverlay ? "OverlayMaterial" : "HeadMaterial";
+	});
+}
+function convertReliefUvsToGlbSpace(group) {
+	group.traverse((child) => {
+		if (!(child instanceof THREE.Mesh) || !child.geometry) return;
+		const uvAttr = child.geometry.getAttribute("uv");
+		if (!uvAttr || !(uvAttr instanceof THREE.BufferAttribute)) return;
+		for (let i = 0; i < uvAttr.count; i++) uvAttr.setY(i, 1 - uvAttr.getY(i));
+		uvAttr.needsUpdate = true;
+	});
+}
+function finalizeReliefGlbExport(group) {
+	return new Promise((resolve, reject) => {
+		new GLTFExporter().parse(group, (gltf) => {
+			try {
+				if (gltf instanceof ArrayBuffer) {
+					downloadBlob(new Blob([gltf], { type: "application/octet-stream" }), "skinbridge_cabeza.glb");
+					resolve();
+				} else reject(/* @__PURE__ */ new Error("Formato de exportación inválido para GLB con relieve."));
+			} catch (err) {
+				reject(err);
+			}
+		}, (error) => {
+			reject(error);
+		}, {
+			binary: true,
+			animations: [],
+			includeCustomExtensions: true
+		});
 	});
 }
 function exportToGLBWithRelief(skinImage, heightmap) {
 	return new Promise((resolve, reject) => {
-		const parseAndDownload = (objectToExport) => {
-			new GLTFExporter().parse(objectToExport, (gltf) => {
-				try {
-					if (gltf instanceof ArrayBuffer) {
-						downloadBlob(new Blob([gltf], { type: "application/octet-stream" }), "skinbridge_cabeza.glb");
-						resolve();
-					} else reject(/* @__PURE__ */ new Error("Formato de exportación inválido (esperaba binario GLB)."));
-				} catch (err) {
-					reject(err);
-				}
-			}, (error) => {
-				reject(error);
-			}, {
-				binary: true,
-				animations: [],
-				includeCustomExtensions: true
-			});
-		};
-		try {
-			const canvas = document.createElement("canvas");
-			canvas.width = 1024;
-			canvas.height = 1024;
-			const ctx = canvas.getContext("2d");
-			if (!ctx) {
-				reject(/* @__PURE__ */ new Error("No se pudo crear el contexto 2D para la textura GLB."));
-				return;
-			}
-			const tempCanvas = document.createElement("canvas");
-			tempCanvas.width = 64;
-			tempCanvas.height = 64;
-			const tempCtx = tempCanvas.getContext("2d");
-			tempCtx.drawImage(skinImage, 0, 0, 64, 64, 0, 0, 64, 64);
-			const dilatedData = dilateTexture(tempCtx.getImageData(0, 0, 64, 64));
-			tempCtx.putImageData(dilatedData, 0, 0);
-			ctx.imageSmoothingEnabled = false;
-			ctx.drawImage(tempCanvas, 0, 0, 64, 64, 0, 0, 1024, 1024);
-			const skinDataUrl = canvas.toDataURL("image/png");
-			const img = new Image();
-			img.onload = () => {
-				try {
-					const texture = new THREE.Texture(img);
-					texture.name = "textura.png";
-					texture.minFilter = THREE.NearestFilter;
-					texture.magFilter = THREE.NearestFilter;
-					texture.generateMipmaps = false;
-					texture.colorSpace = THREE.SRGBColorSpace;
-					texture.needsUpdate = true;
-					const exportGroup = buildReliefExportGroup(skinImage, heightmap);
-					applyExportMaterials$1(exportGroup, texture);
-					parseAndDownload(exportGroup);
-				} catch (exportError) {
-					reject(exportError);
-				}
-			};
-			img.onerror = () => {
-				reject(/* @__PURE__ */ new Error("No se pudo cargar la imagen de la textura escalada para GLB."));
-			};
-			img.src = skinDataUrl;
-		} catch (err) {
-			reject(err);
-		}
+		createReliefGlbTexture(skinImage).then((texture) => {
+			const exportGroup = buildReliefGlbExportGroup(skinImage, heightmap);
+			applyReliefGlbMaterials(exportGroup, texture);
+			convertReliefUvsToGlbSpace(exportGroup);
+			return finalizeReliefGlbExport(exportGroup);
+		}).then(() => resolve()).catch(reject);
 	});
 }
 //#endregion

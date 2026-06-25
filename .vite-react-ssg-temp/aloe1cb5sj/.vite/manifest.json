@@ -1,6 +1,6 @@
 {
-  "_OBJExporter-AdDLe9Up.js": {
-    "file": "assets/OBJExporter-AdDLe9Up.js",
+  "_OBJExporter-HRuoZEqT.js": {
+    "file": "assets/OBJExporter-HRuoZEqT.js",
     "name": "OBJExporter"
   },
   "_ThreeViewer-CRwfpc2W.js": {
@@ -12,25 +12,25 @@
     "name": "rateLimit"
   },
   "src/components/BlockbenchWorkspace.tsx": {
-    "file": "assets/BlockbenchWorkspace-JMhX_PBE.js",
+    "file": "assets/BlockbenchWorkspace-CLp30DYY.js",
     "name": "BlockbenchWorkspace",
     "src": "src/components/BlockbenchWorkspace.tsx",
     "isDynamicEntry": true,
     "imports": [
       "src/main.tsx",
-      "_OBJExporter-AdDLe9Up.js",
+      "_OBJExporter-HRuoZEqT.js",
       "_ThreeViewer-CRwfpc2W.js"
     ]
   },
   "src/components/Head3DWorkspace.tsx": {
-    "file": "assets/Head3DWorkspace-DVlb5wl7.js",
+    "file": "assets/Head3DWorkspace-CqpICaGG.js",
     "name": "Head3DWorkspace",
     "src": "src/components/Head3DWorkspace.tsx",
     "isDynamicEntry": true,
     "imports": [
       "src/main.tsx",
       "_rateLimit-BgQdUSFi.js",
-      "_OBJExporter-AdDLe9Up.js",
+      "_OBJExporter-HRuoZEqT.js",
       "_ThreeViewer-CRwfpc2W.js"
     ]
   },

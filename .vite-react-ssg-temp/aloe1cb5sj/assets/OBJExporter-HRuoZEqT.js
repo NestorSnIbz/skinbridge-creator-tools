@@ -1809,4 +1809,4 @@ map_Kd skinbridge_textura.png
 	});
 }
 //#endregion
-export { exportToOBJClassic as a, dilateTexture as i, buildReliefExportGroup as n, exportToOBJWithRelief as o, buildVoxelizedOverlay as r, build3DHead as s, buildBaseHead as t };
+export { exportToOBJClassic as a, buildVoxelizedOverlayWithRelief as c, dilateTexture as i, buildReliefExportGroup as n, exportToOBJWithRelief as o, buildVoxelizedOverlay as r, build3DHead as s, buildBaseHead as t };
