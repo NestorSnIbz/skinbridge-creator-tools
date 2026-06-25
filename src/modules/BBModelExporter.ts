@@ -22,7 +22,8 @@ function getBase64Image(image: HTMLImageElement): string {
   const ctx = canvas.getContext('2d');
   if (!ctx) return '';
   
-  ctx.drawImage(image, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(image, 0, 0, 64, 64);
   return canvas.toDataURL('image/png');
 }
 

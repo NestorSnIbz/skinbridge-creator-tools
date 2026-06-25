@@ -21,13 +21,18 @@ function downloadBinaryFile(data: Uint8Array, filename: string) {
 
 /**
  * Exports the Three.js head model to a binary FBX file.
- * Voxelizes the base head and overlay as flat planes/quads to ensure correct transparency and look in Roblox.
+ * Voxelizes the base head and overlay as flat planes/quads (or 3D voxel cubes if heightmap is provided) to ensure correct look in Roblox.
  * Employs dilated textures scaled to 1024x1024 to prevent filtering seams.
  *
  * @param _input The THREE.Object3D (head group) - ignored, we rebuild voxelized geometry like OBJ.
  * @param skinImage The HTMLImageElement containing the skin
+ * @param heightmap Optional heightmap for overlay relief
  */
-export function exportToFBX(_input: THREE.Object3D, skinImage: HTMLImageElement): Promise<void> {
+export function exportToFBX(
+  _input: THREE.Object3D,
+  skinImage: HTMLImageElement,
+  heightmap?: any
+): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       // Prepare the skin texture as a 1024x1024 Nearest-Neighbor scaled data URL for embedding
@@ -90,7 +95,7 @@ export function exportToFBX(_input: THREE.Object3D, skinImage: HTMLImageElement)
           exportGroup.add(voxelizedHead);
 
           // 2. Build and configure voxelized overlay
-          const voxelizedOverlay = buildVoxelizedOverlay(skinImage);
+          const voxelizedOverlay = buildVoxelizedOverlay(skinImage, heightmap);
           voxelizedOverlay.name = 'HeadOverlayVoxelized';
           voxelizedOverlay.traverse((child) => {
             if (child instanceof THREE.Mesh) {
