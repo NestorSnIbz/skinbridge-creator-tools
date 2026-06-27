@@ -15,6 +15,13 @@ interface FaceUVCoords {
   h: number;
 }
 
+interface SolidPixelUVBounds {
+  uMin: number;
+  uMax: number;
+  vMin: number;
+  vMax: number;
+}
+
 /**
  * Sets the UV coordinates for a specific face of a BoxGeometry.
  * 
@@ -109,6 +116,20 @@ export function applyHeadUVs(geometry: THREE.BoxGeometry, isOverlay: boolean) {
  * Builds a BoxGeometry (non-indexed) with all UV coordinates mapped to a single pixel center
  * to ensure that all 6 sides of the voxel cube render as a solid pixel color.
  */
+function setSolidPixelUVForBoxFace(
+  uvAttr: THREE.BufferAttribute,
+  faceIndex: number,
+  bounds: SolidPixelUVBounds
+) {
+  const startIdx = faceIndex * 4;
+  const uCenter = (bounds.uMin + bounds.uMax) / 2;
+  const vCenter = (bounds.vMin + bounds.vMax) / 2;
+
+  for (let i = 0; i < 4; i++) {
+    uvAttr.setXY(startIdx + i, uCenter, vCenter);
+  }
+}
+
 function buildBoxGeometry(
   w: number,
   h: number,
@@ -120,17 +141,68 @@ function buildBoxGeometry(
 ): THREE.BufferGeometry {
   const geom = new THREE.BoxGeometry(w, h, d);
   const uvAttr = geom.attributes.uv as THREE.BufferAttribute;
-  const uCenter = (uMin + uMax) / 2;
-  const vCenter = (vMin + vMax) / 2;
-  
-  for (let i = 0; i < uvAttr.count; i++) {
-    uvAttr.setXY(i, uCenter, vCenter);
+
+  const solidBounds: SolidPixelUVBounds = { uMin, uMax, vMin, vMax };
+  for (let faceIndex = 0; faceIndex < 6; faceIndex++) {
+    setSolidPixelUVForBoxFace(uvAttr, faceIndex, solidBounds);
   }
   uvAttr.needsUpdate = true;
 
   const nonIndexed = geom.toNonIndexed();
   geom.dispose();
   return nonIndexed;
+}
+
+function buildBoxGeometryWithFacePixels(
+  w: number,
+  h: number,
+  d: number,
+  fallbackBounds: SolidPixelUVBounds,
+  faceBounds: Partial<Record<number, SolidPixelUVBounds>>
+): THREE.BufferGeometry {
+  const geom = new THREE.BoxGeometry(w, h, d);
+  const uvAttr = geom.attributes.uv as THREE.BufferAttribute;
+
+  for (let faceIndex = 0; faceIndex < 6; faceIndex++) {
+    setSolidPixelUVForBoxFace(uvAttr, faceIndex, faceBounds[faceIndex] ?? fallbackBounds);
+  }
+
+  uvAttr.needsUpdate = true;
+  const nonIndexed = geom.toNonIndexed();
+  geom.dispose();
+  return nonIndexed;
+}
+
+const BOX_FACE_INDEX_BY_KEY: Record<string, number> = {
+  right: 0,
+  left: 1,
+  top: 2,
+  bottom: 3,
+  front: 4,
+  back: 5,
+};
+
+const OPPOSITE_FACE_KEY: Record<string, string> = {
+  right: 'left',
+  left: 'right',
+  top: 'bottom',
+  bottom: 'top',
+  front: 'back',
+  back: 'front',
+};
+
+function assignAxisFacePixels(
+  target: Partial<Record<number, SolidPixelUVBounds>>,
+  faceKey: string,
+  bounds: SolidPixelUVBounds,
+  includeOpposite = true
+) {
+  const faceIndex = BOX_FACE_INDEX_BY_KEY[faceKey];
+  target[faceIndex] = bounds;
+  if (includeOpposite) {
+    const oppositeIndex = BOX_FACE_INDEX_BY_KEY[OPPOSITE_FACE_KEY[faceKey]];
+    target[oppositeIndex] = bounds;
+  }
 }
 
 /**
@@ -336,7 +408,7 @@ export function buildVoxelizedOverlayWithRelief(
 
   // ─── Pass 1: Build overlay presence mask for every face ───────────────────
   // overlayMask[faceKey][row][col] = { active: bool, heightVal: number, offset: number }
-  type PixelInfo = { active: boolean; heightVal: number; pixelOffset: number; uMin: number; uMax: number; vMin: number; vMax: number };
+  type PixelInfo = SolidPixelUVBounds & { active: boolean; heightVal: number; pixelOffset: number };
   const overlayMask: Record<string, PixelInfo[][]> = {};
 
   faces.forEach((face) => {
@@ -679,7 +751,29 @@ export function buildVoxelizedOverlayWithRelief(
               }
               const rawCapPos = def.capPos(row, piA.pixelOffset, piB.pixelOffset, THICKNESS);
               const capPos = { ...rawCapPos, y: rawCapPos.y + capYShift };
-              const capGeom = buildBoxGeometry(THICKNESS, capH, THICKNESS, cpi.uMin, cpi.uMax, cpi.vMin, cpi.vMax);
+              const capFaceBounds: Partial<Record<number, SolidPixelUVBounds>> = {};
+              assignAxisFacePixels(capFaceBounds, def.faceA, piA, def.faceA !== 'top' && def.faceA !== 'bottom');
+              assignAxisFacePixels(capFaceBounds, def.faceB, piB, def.faceB !== 'top' && def.faceB !== 'bottom');
+              if (row === 0) {
+                const tpx = (def as any).topPixel;
+                const topInfo = tpx ? overlayMask['top']?.[tpx.row]?.[tpx.col] : null;
+                if (topInfo?.active) {
+                  assignAxisFacePixels(capFaceBounds, 'top', topInfo, false);
+                }
+              } else if (row === 7) {
+                const bpx = (def as any).bottomPixel;
+                const bottomInfo = bpx ? overlayMask['bottom']?.[bpx.row]?.[bpx.col] : null;
+                if (bottomInfo?.active) {
+                  assignAxisFacePixels(capFaceBounds, 'bottom', bottomInfo, false);
+                }
+              }
+              const capGeom = buildBoxGeometryWithFacePixels(
+                THICKNESS,
+                capH,
+                THICKNESS,
+                cpi,
+                capFaceBounds
+              );
               capGeom.translate(capPos.x, capPos.y, capPos.z);
               geometries.push(capGeom);
             }
@@ -734,7 +828,16 @@ export function buildVoxelizedOverlayWithRelief(
                 }
                 const rawCPos = hDef.getCapCenter(param, piA.pixelOffset, piB.pixelOffset);
                 const cPos = { x: rawCPos.x + xAdj, y: rawCPos.y, z: rawCPos.z + zAdj };
-                const capGeom = buildBoxGeometry(cW, hDef.capH, cD, cpi.uMin, cpi.uMax, cpi.vMin, cpi.vMax);
+                const capFaceBounds: Partial<Record<number, SolidPixelUVBounds>> = {};
+                assignAxisFacePixels(capFaceBounds, hDef.faceA, piA, hDef.faceA !== 'top' && hDef.faceA !== 'bottom');
+                assignAxisFacePixels(capFaceBounds, hDef.faceB, piB, hDef.faceB !== 'top' && hDef.faceB !== 'bottom');
+                const capGeom = buildBoxGeometryWithFacePixels(
+                  cW,
+                  hDef.capH,
+                  cD,
+                  cpi,
+                  capFaceBounds
+                );
                 capGeom.translate(cPos.x, cPos.y, cPos.z);
                 geometries.push(capGeom);
               }
@@ -794,16 +897,23 @@ export function buildVoxelizedOverlayWithRelief(
       const xOfs = i2.pixelOffset;  // right/left face provides x position
       const yOfs = i3.pixelOffset;  // top/bottom face provides y position
       const zOfs = i1.pixelOffset;  // front/back face provides z position
-      const tcGeom = buildBoxGeometry(
-        THICKNESS, THICKNESS, THICKNESS,
-        i1.uMin, i1.uMax, i1.vMin, i1.vMax
+      const tcFaceBounds: Partial<Record<number, SolidPixelUVBounds>> = {};
+      assignAxisFacePixels(tcFaceBounds, tc.f1, i1, tc.f1 !== 'top' && tc.f1 !== 'bottom');
+      assignAxisFacePixels(tcFaceBounds, tc.f2, i2, tc.f2 !== 'top' && tc.f2 !== 'bottom');
+      assignAxisFacePixels(tcFaceBounds, tc.f3, i3, tc.f3 !== 'top' && tc.f3 !== 'bottom');
+      const tcFaceGeom = buildBoxGeometryWithFacePixels(
+        THICKNESS,
+        THICKNESS,
+        THICKNESS,
+        i1,
+        tcFaceBounds
       );
-      tcGeom.translate(
+      tcFaceGeom.translate(
         tc.sx * (xOfs + THICKNESS / 2),
         tc.sy * (yOfs + THICKNESS / 2),
         tc.sz * (zOfs + THICKNESS / 2)
       );
-      geometries.push(tcGeom);
+      geometries.push(tcFaceGeom);
     }
   }
 

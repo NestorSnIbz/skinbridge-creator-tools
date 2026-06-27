@@ -93,17 +93,44 @@ function applyHeadUVs(geometry, isOverlay) {
 * Builds a BoxGeometry (non-indexed) with all UV coordinates mapped to a single pixel center
 * to ensure that all 6 sides of the voxel cube render as a solid pixel color.
 */
+function setSolidPixelUVForBoxFace(uvAttr, faceIndex, bounds) {
+	const startIdx = faceIndex * 4;
+	const uCenter = (bounds.uMin + bounds.uMax) / 2;
+	const vCenter = (bounds.vMin + bounds.vMax) / 2;
+	for (let i = 0; i < 4; i++) uvAttr.setXY(startIdx + i, uCenter, vCenter);
+}
 function buildBoxGeometry$1(w, h, d, uMin, uMax, vMin, vMax) {
 	const geom = new THREE.BoxGeometry(w, h, d);
 	const uvAttr = geom.attributes.uv;
-	const uCenter = (uMin + uMax) / 2;
-	const vCenter = (vMin + vMax) / 2;
-	for (let i = 0; i < uvAttr.count; i++) uvAttr.setXY(i, uCenter, vCenter);
+	const solidBounds = {
+		uMin,
+		uMax,
+		vMin,
+		vMax
+	};
+	for (let faceIndex = 0; faceIndex < 6; faceIndex++) setSolidPixelUVForBoxFace(uvAttr, faceIndex, solidBounds);
 	uvAttr.needsUpdate = true;
 	const nonIndexed = geom.toNonIndexed();
 	geom.dispose();
 	return nonIndexed;
 }
+function buildBoxGeometryWithFacePixels(w, h, d, fallbackBounds, faceBounds) {
+	const geom = new THREE.BoxGeometry(w, h, d);
+	const uvAttr = geom.attributes.uv;
+	for (let faceIndex = 0; faceIndex < 6; faceIndex++) setSolidPixelUVForBoxFace(uvAttr, faceIndex, faceBounds[faceIndex] ?? fallbackBounds);
+	uvAttr.needsUpdate = true;
+	const nonIndexed = geom.toNonIndexed();
+	geom.dispose();
+	return nonIndexed;
+}
+var BOX_FACE_INDEX_BY_KEY = {
+	right: 0,
+	left: 1,
+	top: 2,
+	bottom: 3,
+	front: 4,
+	back: 5
+};
 /**
 * Merges multiple BufferGeometries (non-indexed) into a single BufferGeometry.
 */
@@ -458,12 +485,12 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 			id: "top-front",
 			faceA: "top",
 			faceB: "front",
-			isEdgeA: (r, _c) => r === 7,
-			paramFromA: (_r, c) => c,
+			isEdgeA: (r, _unusedC) => r === 7,
+			paramFromA: (_unusedR, c) => c,
 			rowBfromP: (_p) => 0,
 			colBfromP: (p) => p,
-			isEdgeB: (r, _c) => r === 0,
-			paramFromB: (_r, c) => c,
+			isEdgeB: (r, _unusedC) => r === 0,
+			paramFromB: (_unusedR, c) => c,
 			rowAfromP: (_p) => 7,
 			colAfromP: (p) => p,
 			clipADim: "h",
@@ -504,12 +531,12 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 			id: "top-back",
 			faceA: "top",
 			faceB: "back",
-			isEdgeA: (r, _c) => r === 0,
-			paramFromA: (_r, c) => c,
+			isEdgeA: (r, _unusedC) => r === 0,
+			paramFromA: (_unusedR, c) => c,
 			rowBfromP: (_p) => 0,
 			colBfromP: (p) => 7 - p,
-			isEdgeB: (r, _c) => r === 0,
-			paramFromB: (_r, c) => 7 - c,
+			isEdgeB: (r, _unusedC) => r === 0,
+			paramFromB: (_unusedR, c) => 7 - c,
 			rowAfromP: (_p) => 0,
 			colAfromP: (p) => p,
 			clipADim: "h",
@@ -550,12 +577,12 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 			id: "top-right",
 			faceA: "top",
 			faceB: "right",
-			isEdgeA: (_r, c) => c === 7,
-			paramFromA: (r, _c) => r,
+			isEdgeA: (_unusedR, c) => c === 7,
+			paramFromA: (r, _unusedC) => r,
 			rowBfromP: (_p) => 0,
 			colBfromP: (p) => 7 - p,
-			isEdgeB: (r, _c) => r === 0,
-			paramFromB: (_r, c) => 7 - c,
+			isEdgeB: (r, _unusedC) => r === 0,
+			paramFromB: (_unusedR, c) => 7 - c,
 			rowAfromP: (p) => p,
 			colAfromP: (_p) => 7,
 			clipADim: "w",
@@ -596,12 +623,12 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 			id: "top-left",
 			faceA: "top",
 			faceB: "left",
-			isEdgeA: (_r, c) => c === 0,
-			paramFromA: (r, _c) => r,
+			isEdgeA: (_unusedR, c) => c === 0,
+			paramFromA: (r, _unusedC) => r,
 			rowBfromP: (_p) => 0,
 			colBfromP: (p) => p,
-			isEdgeB: (r, _c) => r === 0,
-			paramFromB: (_r, c) => c,
+			isEdgeB: (r, _unusedC) => r === 0,
+			paramFromB: (_unusedR, c) => c,
 			rowAfromP: (p) => p,
 			colAfromP: (_p) => 0,
 			clipADim: "w",
@@ -642,12 +669,12 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 			id: "bottom-front",
 			faceA: "bottom",
 			faceB: "front",
-			isEdgeA: (r, _c) => r === 7,
-			paramFromA: (_r, c) => 7 - c,
+			isEdgeA: (r, _unusedC) => r === 7,
+			paramFromA: (_unusedR, c) => 7 - c,
 			rowBfromP: (_p) => 7,
 			colBfromP: (p) => p,
-			isEdgeB: (r, _c) => r === 7,
-			paramFromB: (_r, c) => c,
+			isEdgeB: (r, _unusedC) => r === 7,
+			paramFromB: (_unusedR, c) => c,
 			rowAfromP: (_p) => 7,
 			colAfromP: (p) => 7 - p,
 			clipADim: "h",
@@ -688,12 +715,12 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 			id: "bottom-back",
 			faceA: "bottom",
 			faceB: "back",
-			isEdgeA: (r, _c) => r === 0,
-			paramFromA: (_r, c) => c,
+			isEdgeA: (r, _unusedC) => r === 0,
+			paramFromA: (_unusedR, c) => c,
 			rowBfromP: (_p) => 7,
 			colBfromP: (p) => p,
-			isEdgeB: (r, _c) => r === 7,
-			paramFromB: (_r, c) => c,
+			isEdgeB: (r, _unusedC) => r === 7,
+			paramFromB: (_unusedR, c) => c,
 			rowAfromP: (_p) => 0,
 			colAfromP: (p) => p,
 			clipADim: "h",
@@ -734,12 +761,12 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 			id: "bottom-right",
 			faceA: "bottom",
 			faceB: "right",
-			isEdgeA: (_r, c) => c === 0,
-			paramFromA: (r, _c) => r,
+			isEdgeA: (_unusedR, c) => c === 0,
+			paramFromA: (r, _unusedC) => r,
 			rowBfromP: (_p) => 7,
 			colBfromP: (p) => 7 - p,
-			isEdgeB: (r, _c) => r === 7,
-			paramFromB: (_r, c) => 7 - c,
+			isEdgeB: (r, _unusedC) => r === 7,
+			paramFromB: (_unusedR, c) => 7 - c,
 			rowAfromP: (p) => p,
 			colAfromP: (_p) => 0,
 			clipADim: "w",
@@ -780,12 +807,12 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 			id: "bottom-left",
 			faceA: "bottom",
 			faceB: "left",
-			isEdgeA: (_r, c) => c === 7,
-			paramFromA: (r, _c) => r,
+			isEdgeA: (_unusedR, c) => c === 7,
+			paramFromA: (r, _unusedC) => r,
 			rowBfromP: (_p) => 7,
 			colBfromP: (p) => p,
-			isEdgeB: (r, _c) => r === 7,
-			paramFromB: (_r, c) => c,
+			isEdgeB: (r, _unusedC) => r === 7,
+			paramFromB: (_unusedR, c) => c,
 			rowAfromP: (p) => p,
 			colAfromP: (_p) => 7,
 			clipADim: "w",
@@ -869,7 +896,10 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 							...rawCapPos,
 							y: rawCapPos.y + capYShift
 						};
-						const capGeom = buildBoxGeometry$1(THICKNESS, capH, THICKNESS, cpi.uMin, cpi.uMax, cpi.vMin, cpi.vMax);
+						const capGeom = buildBoxGeometryWithFacePixels(THICKNESS, capH, THICKNESS, cpi, {
+							[BOX_FACE_INDEX_BY_KEY[def.faceA]]: piA,
+							[BOX_FACE_INDEX_BY_KEY[def.faceB]]: piB
+						});
 						capGeom.translate(capPos.x, capPos.y, capPos.z);
 						geometries.push(capGeom);
 					}
@@ -925,7 +955,10 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 								y: rawCPos.y,
 								z: rawCPos.z + zAdj
 							};
-							const capGeom = buildBoxGeometry$1(cW, hDef.capH, cD, cpi.uMin, cpi.uMax, cpi.vMin, cpi.vMax);
+							const capGeom = buildBoxGeometryWithFacePixels(cW, hDef.capH, cD, cpi, {
+								[BOX_FACE_INDEX_BY_KEY[hDef.faceA]]: piA,
+								[BOX_FACE_INDEX_BY_KEY[hDef.faceB]]: piB
+							});
 							capGeom.translate(cPos.x, cPos.y, cPos.z);
 							geometries.push(capGeom);
 						}
@@ -1059,9 +1092,13 @@ function buildVoxelizedOverlayWithRelief(skinImage, heightmap) {
 			const xOfs = i2.pixelOffset;
 			const yOfs = i3.pixelOffset;
 			const zOfs = i1.pixelOffset;
-			const tcGeom = buildBoxGeometry$1(THICKNESS, THICKNESS, THICKNESS, i1.uMin, i1.uMax, i1.vMin, i1.vMax);
-			tcGeom.translate(tc.sx * (xOfs + THICKNESS / 2), tc.sy * (yOfs + THICKNESS / 2), tc.sz * (zOfs + THICKNESS / 2));
-			geometries.push(tcGeom);
+			const tcFaceGeom = buildBoxGeometryWithFacePixels(THICKNESS, THICKNESS, THICKNESS, i1, {
+				[BOX_FACE_INDEX_BY_KEY[tc.f1]]: i1,
+				[BOX_FACE_INDEX_BY_KEY[tc.f2]]: i2,
+				[BOX_FACE_INDEX_BY_KEY[tc.f3]]: i3
+			});
+			tcFaceGeom.translate(tc.sx * (xOfs + THICKNESS / 2), tc.sy * (yOfs + THICKNESS / 2), tc.sz * (zOfs + THICKNESS / 2));
+			geometries.push(tcFaceGeom);
 		}
 	}
 	const voxelMaterial = new THREE.MeshStandardMaterial({
