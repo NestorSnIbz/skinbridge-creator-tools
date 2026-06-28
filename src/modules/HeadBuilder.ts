@@ -753,6 +753,12 @@ function buildVoxelizedOverlayWithReliefInternal(
         // Perform face culling (0:+X, 1:-X, 2:+Y, 3:-Y, 4:+Z outer, 5:-Z inner)
         const visibleFaces = [false, false, false, false, true, false];
 
+        const getPriority = (f: string) => {
+          if (f === 'top' || f === 'bottom') return 3;
+          if (f === 'front' || f === 'back') return 2;
+          return 1;
+        };
+
         for (let fi = 0; fi < 4; fi++) {
           let hasSameFaceNeighbor = false;
           if (fi === 0 && col < 7) hasSameFaceNeighbor = overlayMask[face.key][row][col + 1]?.active;
@@ -764,20 +770,64 @@ function buildVoxelizedOverlayWithReliefInternal(
             visibleFaces[fi] = false;
           } else {
             const bNeighbor = getBoundaryNeighbor(face.key, row, col, fi);
-            if (isNeighborActive(bNeighbor)) {
-              const adjOffset = overlayMask[bNeighbor!.face][bNeighbor!.row][bNeighbor!.col].pixelOffset;
-              const limitCoord = adjOffset + THICKNESS;
+            if (bNeighbor) {
+              // This is a boundary edge!
+              // Add a tiny overlap of 0.005 to prevent rendering seams / Z-fighting along the corner edges
+              let limitCoord = baseBoundary;
+              const isNeighborActiveVal = isNeighborActive(bNeighbor);
+              if (isNeighborActiveVal) {
+                const adjOffset = overlayMask[bNeighbor.face][bNeighbor.row][bNeighbor.col].pixelOffset;
+                limitCoord = adjOffset + THICKNESS;
+              }
 
-              // Clip the voxel boundary to the adjacent voxel's outer face limit
+              // Check priority: if current face has higher priority than neighbor face, add 0.005 overlap
+              if (getPriority(face.key) > getPriority(bNeighbor.face)) {
+                limitCoord += 0.005;
+              }
+
+              // Clip the voxel boundary to the limit coordinate
               if (fi === 0) xMax = limitCoord;
               else if (fi === 1) xMin = -limitCoord;
               else if (fi === 2) yMax = limitCoord;
               else if (fi === 3) yMin = -limitCoord;
 
-              // Cull this side face to prevent coplanar intersections with the adjacent outer face
-              visibleFaces[fi] = false;
+              // Cull the boundary side face only if the neighbor is active (otherwise it is exposed and must be rendered to seal the voxel)
+              if (isNeighborActiveVal) {
+                visibleFaces[fi] = false;
+              } else {
+                visibleFaces[fi] = true;
+              }
             } else {
               visibleFaces[fi] = true;
+            }
+          }
+        }
+
+        // Apply secondary priority-based coordinate offsets for perpendicular side walls to prevent Z-fighting at corners without leaving gaps
+        for (let fi = 0; fi < 4; fi++) {
+          if (!visibleFaces[fi]) continue;
+          
+          if (fi === 0 || fi === 1) { // X-facing faces (check Y-facing boundaries)
+            const bTop = getBoundaryNeighbor(face.key, row, col, 2);
+            if (bTop && isNeighborActive(bTop) && getPriority(face.key) < getPriority(bTop.face)) {
+              if (fi === 0) xMax -= 0.005;
+              else if (fi === 1) xMin += 0.005;
+            }
+            const bBottom = getBoundaryNeighbor(face.key, row, col, 3);
+            if (bBottom && isNeighborActive(bBottom) && getPriority(face.key) < getPriority(bBottom.face)) {
+              if (fi === 0) xMax -= 0.005;
+              else if (fi === 1) xMin += 0.005;
+            }
+          } else if (fi === 2 || fi === 3) { // Y-facing faces (check X-facing boundaries)
+            const bRight = getBoundaryNeighbor(face.key, row, col, 0);
+            if (bRight && isNeighborActive(bRight) && getPriority(face.key) < getPriority(bRight.face)) {
+              if (fi === 2) yMax -= 0.005;
+              else if (fi === 3) yMin += 0.005;
+            }
+            const bLeft = getBoundaryNeighbor(face.key, row, col, 1);
+            if (bLeft && isNeighborActive(bLeft) && getPriority(face.key) < getPriority(bLeft.face)) {
+              if (fi === 2) yMax -= 0.005;
+              else if (fi === 3) yMin += 0.005;
             }
           }
         }
