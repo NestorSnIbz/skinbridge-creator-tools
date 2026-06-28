@@ -112,23 +112,7 @@ export function applyHeadUVs(geometry: THREE.BoxGeometry, isOverlay: boolean) {
  * @param skinImage The HTMLImageElement containing the skin
  * @returns A THREE.Group containing the 3D Head model
  */
-/**
- * Builds a BoxGeometry (non-indexed) with all UV coordinates mapped to a single pixel center
- * to ensure that all 6 sides of the voxel cube render as a solid pixel color.
- */
-function setSolidPixelUVForBoxFace(
-  uvAttr: THREE.BufferAttribute,
-  faceIndex: number,
-  bounds: SolidPixelUVBounds
-) {
-  const startIdx = faceIndex * 4;
-  const uCenter = (bounds.uMin + bounds.uMax) / 2;
-  const vCenter = (bounds.vMin + bounds.vMax) / 2;
 
-  for (let i = 0; i < 4; i++) {
-    uvAttr.setXY(startIdx + i, uCenter, vCenter);
-  }
-}
 
 /**
  * Emits a single face of an axis-aligned box as a non-indexed quad (2 triangles).
@@ -222,106 +206,6 @@ function buildCulledBoxGeometry(
   return merged;
 }
 
-/**
- * Like buildCulledBoxGeometry but each face can have its own UV bounds
- * (used for caps/tri-corners that span multiple skin pixels).
- */
-function buildCulledBoxGeometryWithFacePixels(
-  w: number, h: number, d: number,
-  fallback: SolidPixelUVBounds,
-  faceBounds: Partial<Record<number, SolidPixelUVBounds>>,
-  visibleFaces: boolean[]
-): THREE.BufferGeometry {
-  const parts: THREE.BufferGeometry[] = [];
-  for (let fi = 0; fi < 6; fi++) {
-    if (visibleFaces[fi]) {
-      const b = faceBounds[fi] ?? fallback;
-      parts.push(buildSingleFaceGeometry(fi, w, h, d, b.uMin, b.uMax, b.vMin, b.vMax));
-    }
-  }
-  if (parts.length === 0) return new THREE.BufferGeometry();
-  if (parts.length === 1) return parts[0];
-  const merged = mergeBufferGeometries(parts);
-  parts.forEach(p => p.dispose());
-  return merged;
-}
-
-// Legacy wrappers kept for external callers that still reference these names.
-// They emit all 6 faces (no culling) — only used for the base head which has no coplanar issue.
-function buildBoxGeometry(
-  w: number, h: number, d: number,
-  uMin: number, uMax: number, vMin: number, vMax: number
-): THREE.BufferGeometry {
-  return buildCulledBoxGeometry(w, h, d, uMin, uMax, vMin, vMax, [true,true,true,true,true,true]);
-}
-
-function buildBoxGeometryWithFacePixels(
-  w: number, h: number, d: number,
-  fallbackBounds: SolidPixelUVBounds,
-  faceBounds: Partial<Record<number, SolidPixelUVBounds>>
-): THREE.BufferGeometry {
-  return buildCulledBoxGeometryWithFacePixels(
-    w, h, d, fallbackBounds, faceBounds,
-    [true,true,true,true,true,true] // caps emit all 6 until we decide which to cull below
-  );
-}
-
-const BOX_FACE_INDEX_BY_KEY: Record<string, number> = {
-  right: 0,
-  left: 1,
-  top: 2,
-  bottom: 3,
-  front: 4,
-  back: 5,
-};
-
-const OPPOSITE_FACE_KEY: Record<string, string> = {
-  right: 'left',
-  left: 'right',
-  top: 'bottom',
-  bottom: 'top',
-  front: 'back',
-  back: 'front',
-};
-
-/**
- * Maps each head face key to the local-space face index (buildSingleFaceGeometry convention)
- * whose normal points OUTWARD for that face (away from the head center at origin).
- *
- * Face indices (pre-rotation local space):
- *   0 = +X right   1 = -X left
- *   2 = +Y top     3 = -Y bottom
- *   4 = +Z front   5 = -Z back
- *
- * Used to determine which faces of cap/corner geometry should be visible:
- * a cap between faceA and faceB should only show the faces with outward indices
- * for faceA and faceB, suppressing all other faces whose normals would be
- * perpendicular to the adjacent face's outward direction and therefore appear
- * as a darker border due to different lighting angle in MeshStandardMaterial.
- */
-const FACE_KEY_OUTWARD_IDX: Record<string, number> = {
-  right:  0,  // +X outward → face index 0
-  left:   1,  // -X outward → face index 1
-  top:    2,  // +Y outward → face index 2
-  bottom: 3,  // -Y outward → face index 3
-  front:  4,  // +Z outward → face index 4
-  back:   5,  // -Z outward → face index 5
-};
-
-
-function assignAxisFacePixels(
-  target: Partial<Record<number, SolidPixelUVBounds>>,
-  faceKey: string,
-  bounds: SolidPixelUVBounds,
-  includeOpposite = true
-) {
-  const faceIndex = BOX_FACE_INDEX_BY_KEY[faceKey];
-  target[faceIndex] = bounds;
-  if (includeOpposite) {
-    const oppositeIndex = BOX_FACE_INDEX_BY_KEY[OPPOSITE_FACE_KEY[faceKey]];
-    target[oppositeIndex] = bounds;
-  }
-}
 
 /**
  * Merges multiple BufferGeometries (non-indexed) into a single BufferGeometry.
