@@ -429,7 +429,7 @@ export function buildBaseHead(skinImage: HTMLImageElement): THREE.Group {
   const baseMaterial = new THREE.MeshStandardMaterial({
     roughness: 0.6,
     metalness: 0.1,
-    side: THREE.DoubleSide
+    side: THREE.FrontSide
   });
 
   if (geometries.length > 0) {
@@ -715,7 +715,7 @@ export function buildVoxelizedOverlay(
   const voxelMaterial = new THREE.MeshStandardMaterial({
     roughness: 0.6,
     metalness: 0.1,
-    side: THREE.DoubleSide
+    side: THREE.FrontSide
   });
 
   if (geometries.length > 0) {
