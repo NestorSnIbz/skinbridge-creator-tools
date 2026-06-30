@@ -137,17 +137,17 @@ function buildSingleFaceGeometry(
   // Raw quad corners for each face (CCW winding when viewed from outside)
   type V3 = [number, number, number];
   const quads: [V3, V3, V3, V3, V3][] = [ // [v0, v1, v2, v3, normal]
-    // 0: +X right
-    [[ hw, -hh,  hd], [ hw,  hh,  hd], [ hw, -hh, -hd], [ hw,  hh, -hd], [1,0,0]],
-    // 1: -X left
-    [[-hw, -hh, -hd], [-hw,  hh, -hd], [-hw, -hh,  hd], [-hw,  hh,  hd], [-1,0,0]],
-    // 2: +Y top
-    [[-hw,  hh,  hd], [ hw,  hh,  hd], [-hw,  hh, -hd], [ hw,  hh, -hd], [0,1,0]],
-    // 3: -Y bottom
+    // 0: +X right (corrected CCW winding)
+    [[ hw, -hh,  hd], [ hw, -hh, -hd], [ hw,  hh,  hd], [ hw,  hh, -hd], [1,0,0]],
+    // 1: -X left (corrected CCW winding)
+    [[-hw, -hh, -hd], [-hw, -hh,  hd], [-hw,  hh, -hd], [-hw,  hh,  hd], [-1,0,0]],
+    // 2: +Y top (corrected CCW winding)
+    [[-hw,  hh, -hd], [-hw,  hh,  hd], [ hw,  hh, -hd], [ hw,  hh,  hd], [0,1,0]],
+    // 3: -Y bottom (already correct CCW winding)
     [[-hw, -hh, -hd], [ hw, -hh, -hd], [-hw, -hh,  hd], [ hw, -hh,  hd], [0,-1,0]],
-    // 4: +Z front (outer / outward)
+    // 4: +Z front (already correct CCW winding)
     [[-hw, -hh,  hd], [ hw, -hh,  hd], [-hw,  hh,  hd], [ hw,  hh,  hd], [0,0,1]],
-    // 5: -Z back (inner / toward base head) — almost always culled
+    // 5: -Z back (already correct CCW winding)
     [[ hw, -hh, -hd], [-hw, -hh, -hd], [ hw,  hh, -hd], [-hw,  hh, -hd], [0,0,-1]],
   ];
 
@@ -455,16 +455,15 @@ function buildVoxelizedOverlayWithReliefInternal(
       key: 'bottom',
       startX: 48, startY: 0,
       applyRotation: (geom: THREE.BufferGeometry) => {
-        geom.rotateZ(Math.PI);
         geom.rotateX(Math.PI / 2);
       },
       getGridCoord: (col: number, row: number, d: number) => ({
-        gx: 7 - col,
+        gx: col,
         gy: 0 - d,
-        gz: row
+        gz: 7 - row
       }),
       getPos: (col: number, row: number, thickness: number, pixelOffset: number) => ({
-        x: gridOffset - col * pixelSize,
+        x: -gridOffset + col * pixelSize,
         y: -(pixelOffset + thickness / 2),
         z: -gridOffset + row * pixelSize
       })
@@ -518,13 +517,18 @@ function buildVoxelizedOverlayWithReliefInternal(
     for (let row = 0; row < 8; row++) {
       const rowArr: PixelInfo[] = [];
       for (let col = 0; col < 8; col++) {
+        // For the bottom face, the base-layer UV (setFaceUVs faceIndex===3) maps
+        // front→row7 and back→row0. But the voxel loop places row=0 at the front
+        // (via rotateX(PI/2), +Y local → +Z world). So we invert the texture row
+        // for 'bottom' so the colors match the base layer orientation.
+        const texRow = face.key === 'bottom' ? (7 - row) : row;
         const px = face.startX + col;
-        const py = face.startY + row;
+        const py = face.startY + texRow;
         const idx = (py * 64 + px) * 4;
         const alpha = imgData.data[idx + 3];
 
         if (alpha > 10) {
-          let heightVal = faceHeightmap ? faceHeightmap[row]?.[col] ?? 1 : 1;
+          let heightVal = faceHeightmap ? faceHeightmap[texRow]?.[col] ?? 1 : 1;
           if (heightVal === 0) heightVal = 1;
 
           const pixelOffset = (heightVal === 3 || heightVal === 4)
@@ -553,12 +557,6 @@ function buildVoxelizedOverlayWithReliefInternal(
   //   center shift  = −(1.125 − clipped width)/2
   const THICKNESS    = 0.35;
 
-
-
-
-
-
-
   // Helper to find the adjacent boundary pixel on another face
   function getBoundaryNeighbor(
     faceKey: string,
@@ -573,7 +571,7 @@ function buildVoxelizedOverlayWithReliefInternal(
       if (faceKey === 'right')  return { face: 'back',   row: row,     col: 0 };
       if (faceKey === 'left')   return { face: 'front',  row: row,     col: 0 };
       if (faceKey === 'top')    return { face: 'right',  row: 0,       col: 7 - row };
-      if (faceKey === 'bottom') return { face: 'left',   row: 7,       col: row };
+      if (faceKey === 'bottom') return { face: 'right',  row: 7,       col: row };
     }
     if (localFaceIdx === 1) { // -X local (left boundary)
       if (col > 0) return null;
@@ -582,7 +580,7 @@ function buildVoxelizedOverlayWithReliefInternal(
       if (faceKey === 'right')  return { face: 'front',  row: row,     col: 7 };
       if (faceKey === 'left')   return { face: 'back',   row: row,     col: 7 };
       if (faceKey === 'top')    return { face: 'left',   row: 0,       col: row };
-      if (faceKey === 'bottom') return { face: 'right',  row: 7,       col: 7 - row };
+      if (faceKey === 'bottom') return { face: 'left',   row: 7,       col: 7 - row };
     }
     if (localFaceIdx === 2) { // +Y local (top boundary)
       if (row > 0) return null;
@@ -591,16 +589,16 @@ function buildVoxelizedOverlayWithReliefInternal(
       if (faceKey === 'right')  return { face: 'top',    row: 7 - col, col: 7 };
       if (faceKey === 'left')   return { face: 'top',    row: col,     col: 0 };
       if (faceKey === 'top')    return { face: 'back',   row: 0,       col: 7 - col };
-      if (faceKey === 'bottom') return { face: 'back',   row: 7,       col: col };
+      if (faceKey === 'bottom') return { face: 'front',  row: 7,       col: col };
     }
     if (localFaceIdx === 3) { // -Y local (bottom boundary)
       if (row < 7) return null;
       if (faceKey === 'front')  return { face: 'bottom', row: 0,       col: col };
       if (faceKey === 'back')   return { face: 'bottom', row: 7,       col: 7 - col };
-      if (faceKey === 'right')  return { face: 'bottom', row: 7 - col, col: 0 };
-      if (faceKey === 'left')   return { face: 'bottom', row: col,     col: 7 };
+      if (faceKey === 'right')  return { face: 'bottom', row: col,     col: 7 };
+      if (faceKey === 'left')   return { face: 'bottom', row: 7 - col, col: 0 };
       if (faceKey === 'top')    return { face: 'front',  row: 0,       col: col };
-      if (faceKey === 'bottom') return { face: 'front',  row: 7,       col: 7 - col };
+      if (faceKey === 'bottom') return { face: 'back',   row: 7,       col: 7 - col };
     }
     return null;
   }
@@ -645,13 +643,40 @@ function buildVoxelizedOverlayWithReliefInternal(
 
         for (let fi = 0; fi < 4; fi++) {
           let hasSameFaceNeighbor = false;
-          if (fi === 0 && col < 7) hasSameFaceNeighbor = overlayMask[face.key][row][col + 1]?.active;
-          else if (fi === 1 && col > 0) hasSameFaceNeighbor = overlayMask[face.key][row][col - 1]?.active;
-          else if (fi === 2 && row > 0) hasSameFaceNeighbor = overlayMask[face.key][row - 1][col]?.active;
-          else if (fi === 3 && row < 7) hasSameFaceNeighbor = overlayMask[face.key][row + 1][col]?.active;
+          let sameFaceNeighborOffset = 0;
+          if (fi === 0 && col < 7) {
+            const nb = overlayMask[face.key][row][col + 1];
+            if (nb?.active) {
+              hasSameFaceNeighbor = true;
+              sameFaceNeighborOffset = nb.pixelOffset;
+            }
+          } else if (fi === 1 && col > 0) {
+            const nb = overlayMask[face.key][row][col - 1];
+            if (nb?.active) {
+              hasSameFaceNeighbor = true;
+              sameFaceNeighborOffset = nb.pixelOffset;
+            }
+          } else if (fi === 2 && row > 0) {
+            const nb = overlayMask[face.key][row - 1][col];
+            if (nb?.active) {
+              hasSameFaceNeighbor = true;
+              sameFaceNeighborOffset = nb.pixelOffset;
+            }
+          } else if (fi === 3 && row < 7) {
+            const nb = overlayMask[face.key][row + 1][col];
+            if (nb?.active) {
+              hasSameFaceNeighbor = true;
+              sameFaceNeighborOffset = nb.pixelOffset;
+            }
+          }
 
           if (hasSameFaceNeighbor) {
-            visibleFaces[fi] = false;
+            // Only cull side face if same-face neighbor is active and has equal or higher offset
+            if (sameFaceNeighborOffset >= info.pixelOffset) {
+              visibleFaces[fi] = false;
+            } else {
+              visibleFaces[fi] = true;
+            }
           } else {
             const bNeighbor = getBoundaryNeighbor(face.key, row, col, fi);
             if (bNeighbor) {
@@ -659,9 +684,11 @@ function buildVoxelizedOverlayWithReliefInternal(
               // Add a tiny overlap of 0.005 to prevent rendering seams / Z-fighting along the corner edges
               let limitCoord = baseBoundary;
               const isNeighborActiveVal = isNeighborActive(bNeighbor);
+              let neighborOffset = 0;
               if (isNeighborActiveVal) {
-                const adjOffset = overlayMask[bNeighbor.face][bNeighbor.row][bNeighbor.col].pixelOffset;
-                limitCoord = adjOffset + THICKNESS;
+                const nbInfo = overlayMask[bNeighbor.face][bNeighbor.row][bNeighbor.col];
+                neighborOffset = nbInfo.pixelOffset;
+                limitCoord = neighborOffset + THICKNESS;
               }
 
               // Check priority: if current face has higher priority than neighbor face, add 0.005 overlap
@@ -675,8 +702,8 @@ function buildVoxelizedOverlayWithReliefInternal(
               else if (fi === 2) yMax = limitCoord;
               else if (fi === 3) yMin = -limitCoord;
 
-              // Cull the boundary side face only if the neighbor is active (otherwise it is exposed and must be rendered to seal the voxel)
-              if (isNeighborActiveVal) {
+              // Cull the boundary side face only if the neighbor is active and has equal or higher offset
+              if (isNeighborActiveVal && neighborOffset >= info.pixelOffset) {
                 visibleFaces[fi] = false;
               } else {
                 visibleFaces[fi] = true;
@@ -741,7 +768,7 @@ function buildVoxelizedOverlayWithReliefInternal(
   const voxelMaterial = new THREE.MeshStandardMaterial({
     roughness: 0.6,
     metalness: 0.1,
-    side: THREE.DoubleSide
+    side: THREE.FrontSide
   });
 
   if (geometries.length > 0) {
@@ -835,7 +862,7 @@ export function build3DHead(
       metalness: 0.1,
       transparent: true,
       alphaTest: 0.1,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide,
     });
     
     const classicMesh = new THREE.Mesh(overlayGeo, overlayMat);

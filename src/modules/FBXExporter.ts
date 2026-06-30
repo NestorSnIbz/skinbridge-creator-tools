@@ -39,7 +39,7 @@ function applyExportMaterials(group: THREE.Object3D, texture: THREE.Texture) {
       map: texture,
       roughness: 0.6,
       metalness: 0.1,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide,
       transparent: isOverlay,
       alphaTest: isOverlay ? 0.1 : 0,
     });
@@ -104,7 +104,7 @@ export function exportToFBXClassic(
                 map: texture,
                 roughness: 0.6,
                 metalness: 0.1,
-                side: THREE.DoubleSide
+                side: THREE.FrontSide
               });
               child.material.name = 'HeadMaterial';
             }
@@ -120,7 +120,7 @@ export function exportToFBXClassic(
                 map: texture,
                 roughness: 0.6,
                 metalness: 0.1,
-                side: THREE.DoubleSide,
+                side: THREE.FrontSide,
                 transparent: true,
                 alphaTest: 0.1
               });
