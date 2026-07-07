@@ -473,7 +473,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                     </p>
                     
                     {/* Actions */}
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
                       <a 
                         href={`/share/${item.type}/${item.slug}`} 
                         target="_blank" 
