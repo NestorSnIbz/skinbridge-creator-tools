@@ -38,6 +38,18 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
   const navigate = useNavigate();
   const filteredActivity = stats.activity.filter(item => item.actionKey !== 'act_visit');
 
+  const formatFilename = (name: string) => {
+    if (!name) return '';
+    if (name.length > 24) {
+      const ext = name.split('.').pop() || '';
+      const base = name.substring(0, name.lastIndexOf('.')) || name;
+      if (base.length > 18) {
+        return `${base.substring(0, 8)}...${base.substring(base.length - 6)}.${ext}`;
+      }
+    }
+    return name;
+  };
+
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -238,7 +250,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
           {/* Distribution Chart (Workspace Usage) */}
           <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h4 className="voxel-caption" style={{ margin: 0 }}>{t('dash_stat_favorite_tool')}</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center', minHeight: '140px', height: 'auto', fontFamily: 'monospace', fontSize: '0.8rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center', minHeight: '140px', height: 'auto', fontSize: '0.8rem' }}>
               {(() => {
                 const headCount = stats.headUsage || 0;
                 const robloxCount = stats.robloxUsage || 0;
@@ -255,7 +267,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                         <span>{t('module_3d_head')}</span>
                         <span style={{ color: '#8b5cf6', fontWeight: 'bold' }}>{headPct}% ({headCount})</span>
                       </div>
-                      <div style={{ color: '#8b5cf6', letterSpacing: '2px', fontSize: '1rem', userSelect: 'none' }}>
+                      <div className="metric-bar" style={{ color: '#8b5cf6', userSelect: 'none' }}>
                         [{getBlockBar(headPct, 20)}]
                       </div>
                     </div>
@@ -265,7 +277,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                         <span>{t('module_roblox')}</span>
                         <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{robloxPct}% ({robloxCount})</span>
                       </div>
-                      <div style={{ color: '#ef4444', letterSpacing: '2px', fontSize: '1rem', userSelect: 'none' }}>
+                      <div className="metric-bar" style={{ color: '#ef4444', userSelect: 'none' }}>
                         [{getBlockBar(robloxPct, 20)}]
                       </div>
                     </div>
@@ -275,7 +287,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                         <span>{t('nav_blockbench')}</span>
                         <span style={{ color: '#10b981', fontWeight: 'bold' }}>{bbPct}% ({bbCount})</span>
                       </div>
-                      <div style={{ color: '#10b981', letterSpacing: '2px', fontSize: '1rem', userSelect: 'none' }}>
+                      <div className="metric-bar" style={{ color: '#10b981', userSelect: 'none' }}>
                         [{getBlockBar(bbPct, 20)}]
                       </div>
                     </div>
@@ -307,7 +319,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                         <span>{f}</span>
                         <span style={{ color, fontWeight: 'bold' }}>{val} units ({sharePct}%)</span>
                       </div>
-                      <div style={{ color, letterSpacing: '1px', userSelect: 'none' }}>
+                      <div className="format-bar" style={{ color, userSelect: 'none' }}>
                         [{getBlockBar(sharePct, 24)}]
                       </div>
                     </div>
@@ -358,9 +370,9 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                     <span>{iconStr}</span>
                     <span>
                       {item.actionKey === 'act_upload'
-                        ? t('act_upload', { name: item.details })
+                        ? t('act_upload', { name: formatFilename(item.details) })
                         : item.actionKey === 'act_export'
-                          ? t('act_export', { format: item.details.split('.').pop()?.toUpperCase() || 'FILE', name: item.details })
+                          ? t('act_export', { format: item.details.split('.').pop()?.toUpperCase() || 'FILE', name: formatFilename(item.details) })
                           : t('act_visit', { tool: item.details })}
                     </span>
                   </div>
@@ -473,7 +485,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                     </p>
                     
                     {/* Actions */}
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
                       <a 
                         href={`/share/${item.type}/${item.slug}`} 
                         target="_blank" 
