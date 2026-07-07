@@ -517,7 +517,7 @@ export default function RobloxWorkspace({
         </div>
 
         {/* 2D Templates grid */}
-        <div className="roblox-templates-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '0 24px 24px 24px' }}>
+        <div className="roblox-templates-grid">
           <div className="template-card">
             <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('template_shirt_title')}</h3>
             <div className="template-canvas-container" style={{ width: '100%', maxHeight: '200px', display: 'flex', justifyContent: 'center' }}>

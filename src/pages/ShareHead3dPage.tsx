@@ -150,7 +150,7 @@ export default function ShareHead3dPage() {
         </header>
 
         {/* Main Grid */}
-        <main className="main-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+        <main className="main-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '24px' }}>
           
           {/* Left Panel: Preview screenshot & actions */}
           <section className="glass-panel sidebar-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
