@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Navigate, useNavigate, Outlet } from 'react-router-dom';
-import { Box, CheckCircle, AlertTriangle, LayoutGrid } from 'lucide-react';
+import { CheckCircle, AlertTriangle, LayoutGrid } from 'lucide-react';
 import { validateAndLoadSkin } from './modules/SkinParser';
 import { extractFaces, type ExtractedFaces } from './modules/TextureExtractor';
 import { I18nProvider, useTranslation } from './modules/i18n';
@@ -453,8 +453,16 @@ function AppContent({ activeTab }: { activeTab: 'dashboard' | 'head3d' | 'roblox
       <div className="app-container">
         {/* Sleek Header */}
         <header className="glass-panel app-header">
-          <div className="logo-container" onClick={() => navigateToModule('dashboard')} style={{ cursor: 'pointer' }}>
-            <Box className="logo-icon" size={32} style={{ color: '#818cf8' }} />
+          <div className="logo-container" onClick={() => navigateToModule('dashboard')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img 
+              src="/logo.png" 
+              alt="SkinBridge Logo" 
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                objectFit: 'cover'
+              }} 
+            />
             <div>
               <h1 className="logo-text" style={{ margin: 0 }}>{t('app_title')}</h1>
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#a1a1aa' }}>{t('app_subtitle')}</p>
@@ -514,7 +522,7 @@ function AppContent({ activeTab }: { activeTab: 'dashboard' | 'head3d' | 'roblox
                 ES
               </button>
             </div>
-            <span className="badge">v1.1</span>
+            <span className="badge">v2.0</span>
           </div>
         </header>
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../modules/i18n';
-import { Box, Download, ArrowLeft, ExternalLink, HelpCircle } from 'lucide-react';
+import { Download, ArrowLeft, ExternalLink, HelpCircle } from 'lucide-react';
 
 interface Head3dShareData {
   slug: string;
@@ -137,8 +137,16 @@ export default function ShareHead3dPage() {
         
         {/* Header */}
         <header className="glass-panel app-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-            <Box className="logo-icon" size={32} style={{ color: '#818cf8' }} />
+          <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img 
+              src="/logo.png" 
+              alt="SkinBridge Logo" 
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                objectFit: 'cover'
+              }} 
+            />
             <div>
               <h1 className="logo-text" style={{ margin: 0 }}>SkinBridge</h1>
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#a1a1aa' }}>{t('share_title_head3d')}</p>

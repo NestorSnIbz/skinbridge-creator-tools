@@ -291,7 +291,6 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center', minHeight: '140px', height: 'auto', fontFamily: 'monospace', fontSize: '0.8rem' }}>
               {(() => {
                 const formats = ['GLB', 'BBMODEL', 'Shirt', 'Pants', 'OBJ', 'FBX'];
-                const maxVal = Math.max(...formats.map(f => stats.formats[f] || 0), 1);
                 const sum = formats.reduce((s, f) => s + (stats.formats[f] || 0), 0);
                 
                 if (sum === 0) {
@@ -300,16 +299,16 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                 
                 return formats.map(f => {
                   const val = stats.formats[f] || 0;
-                  const pct = Math.round((val / maxVal) * 100);
+                  const sharePct = sum > 0 ? Math.round((val / sum) * 100) : 0;
                   const color = (f === 'Shirt' || f === 'Pants') ? '#ef4444' : (f === 'OBJ' || f === 'FBX') ? '#10b981' : '#8b5cf6';
                   return (
                     <div key={f} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f4f4f5' }}>
                         <span>{f}</span>
-                        <span style={{ color, fontWeight: 'bold' }}>{val} units ({pct}%)</span>
+                        <span style={{ color, fontWeight: 'bold' }}>{val} units ({sharePct}%)</span>
                       </div>
                       <div style={{ color, letterSpacing: '1px', userSelect: 'none' }}>
-                        [{getBlockBar(pct, 24)}]
+                        [{getBlockBar(sharePct, 24)}]
                       </div>
                     </div>
                   );
