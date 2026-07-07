@@ -12,7 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
     "lucide-react": "^1.21.0",
-    "nanoid": "^5.1.15",
+    "nanoid": "^5.1.16",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-helmet-async": "^3.0.0",
