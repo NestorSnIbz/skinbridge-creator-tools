@@ -27,16 +27,22 @@ interface DashboardViewProps {
   navigateToModule: (module: 'dashboard' | 'head3d' | 'roblox' | 'blockbench') => void;
 }
 
-const getBlockBar = (pct: number, length: number = 20) => {
-  const filledCount = Math.round((pct / 100) * length);
-  const emptyCount = Math.max(0, length - filledCount);
-  return '█'.repeat(filledCount) + '░'.repeat(emptyCount);
-};
-
 export default function DashboardView({ stats, navigateToModule }: DashboardViewProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const filteredActivity = stats.activity.filter(item => item.actionKey !== 'act_visit');
+
+  const formatFilename = (name: string) => {
+    if (!name) return '';
+    if (name.length > 24) {
+      const ext = name.split('.').pop() || '';
+      const base = name.substring(0, name.lastIndexOf('.')) || name;
+      if (base.length > 18) {
+        return `${base.substring(0, 8)}...${base.substring(base.length - 6)}.${ext}`;
+      }
+    }
+    return name;
+  };
 
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -255,8 +261,24 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                         <span>{t('module_3d_head')}</span>
                         <span style={{ color: '#8b5cf6', fontWeight: 'bold' }}>{headPct}% ({headCount})</span>
                       </div>
-                      <div style={{ color: '#8b5cf6', letterSpacing: '2px', fontSize: '1rem', userSelect: 'none' }}>
-                        [{getBlockBar(headPct, 20)}]
+                      <div style={{
+                        width: '100%',
+                        height: '10px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                        marginTop: '4px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        boxSizing: 'border-box'
+                      }}>
+                        <div style={{
+                          width: `${headPct}%`,
+                          height: '100%',
+                          background: 'repeating-linear-gradient(90deg, #8b5cf6 0px, #8b5cf6 8px, transparent 8px, transparent 10px)',
+                          borderRadius: '1px',
+                          boxShadow: '0 0 8px rgba(139, 92, 246, 0.3)',
+                          transition: 'width 0.4s ease'
+                        }} />
                       </div>
                     </div>
                     
@@ -265,8 +287,24 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                         <span>{t('module_roblox')}</span>
                         <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{robloxPct}% ({robloxCount})</span>
                       </div>
-                      <div style={{ color: '#ef4444', letterSpacing: '2px', fontSize: '1rem', userSelect: 'none' }}>
-                        [{getBlockBar(robloxPct, 20)}]
+                      <div style={{
+                        width: '100%',
+                        height: '10px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                        marginTop: '4px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        boxSizing: 'border-box'
+                      }}>
+                        <div style={{
+                          width: `${robloxPct}%`,
+                          height: '100%',
+                          background: 'repeating-linear-gradient(90deg, #ef4444 0px, #ef4444 8px, transparent 8px, transparent 10px)',
+                          borderRadius: '1px',
+                          boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)',
+                          transition: 'width 0.4s ease'
+                        }} />
                       </div>
                     </div>
 
@@ -275,8 +313,24 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                         <span>{t('nav_blockbench')}</span>
                         <span style={{ color: '#10b981', fontWeight: 'bold' }}>{bbPct}% ({bbCount})</span>
                       </div>
-                      <div style={{ color: '#10b981', letterSpacing: '2px', fontSize: '1rem', userSelect: 'none' }}>
-                        [{getBlockBar(bbPct, 20)}]
+                      <div style={{
+                        width: '100%',
+                        height: '10px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                        marginTop: '4px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        boxSizing: 'border-box'
+                      }}>
+                        <div style={{
+                          width: `${bbPct}%`,
+                          height: '100%',
+                          background: 'repeating-linear-gradient(90deg, #10b981 0px, #10b981 8px, transparent 8px, transparent 10px)',
+                          borderRadius: '1px',
+                          boxShadow: '0 0 8px rgba(16, 185, 129, 0.3)',
+                          transition: 'width 0.4s ease'
+                        }} />
                       </div>
                     </div>
                   </>
@@ -307,8 +361,24 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                         <span>{f}</span>
                         <span style={{ color, fontWeight: 'bold' }}>{val} units ({sharePct}%)</span>
                       </div>
-                      <div style={{ color, letterSpacing: '1px', userSelect: 'none' }}>
-                        [{getBlockBar(sharePct, 24)}]
+                      <div style={{
+                        width: '100%',
+                        height: '10px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                        marginTop: '4px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        boxSizing: 'border-box'
+                      }}>
+                        <div style={{
+                          width: `${sharePct}%`,
+                          height: '100%',
+                          background: `repeating-linear-gradient(90deg, ${color} 0px, ${color} 8px, transparent 8px, transparent 10px)`,
+                          borderRadius: '1px',
+                          boxShadow: `0 0 8px ${color}4d`,
+                          transition: 'width 0.4s ease'
+                        }} />
                       </div>
                     </div>
                   );
@@ -358,9 +428,9 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                     <span>{iconStr}</span>
                     <span>
                       {item.actionKey === 'act_upload'
-                        ? t('act_upload', { name: item.details })
+                        ? t('act_upload', { name: formatFilename(item.details) })
                         : item.actionKey === 'act_export'
-                          ? t('act_export', { format: item.details.split('.').pop()?.toUpperCase() || 'FILE', name: item.details })
+                          ? t('act_export', { format: item.details.split('.').pop()?.toUpperCase() || 'FILE', name: formatFilename(item.details) })
                           : t('act_visit', { tool: item.details })}
                     </span>
                   </div>
