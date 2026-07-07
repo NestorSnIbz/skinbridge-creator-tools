@@ -854,6 +854,39 @@ input:checked + .checkbox-custom::after {
   .activity-item span:last-child {
     align-self: flex-end;
   }
+  .metric-bar {
+    font-family: monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+  }
+  .format-bar {
+    font-family: monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0px;
+  }
+}
+
+/* Global Monospace Text-based Bar Classes */
+.metric-bar {
+  font-family: monospace;
+  font-size: 1rem;
+  letter-spacing: 2px;
+}
+.format-bar {
+  font-family: monospace;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+@media (min-width: 480px) {
+  .metric-bar {
+    font-size: 1rem;
+    letter-spacing: 2px;
+  }
+  .format-bar {
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+  }
 }
 
 
