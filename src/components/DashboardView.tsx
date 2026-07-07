@@ -119,7 +119,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
       </div>
 
       {/* Tool Launch Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '24px' }}>
         {/* Card 1: Head3D */}
         <div className="glass-panel workspace-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -198,7 +198,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
         </h3>
 
         {/* KPI Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '16px' }}>
           <div className="kpi-card">
             <span className="voxel-caption">{t('dash_stat_conversions')}</span>
             <span style={{ fontSize: '1.75rem', fontWeight: 800 }}>{stats.conversions}</span>
@@ -234,7 +234,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
         </div>
 
         {/* Graphs / Charts Area */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginTop: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '24px', marginTop: '12px' }}>
           {/* Distribution Chart (Workspace Usage) */}
           <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h4 className="voxel-caption" style={{ margin: 0 }}>{t('dash_stat_favorite_tool')}</h4>
@@ -291,7 +291,6 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center', minHeight: '140px', height: 'auto', fontFamily: 'monospace', fontSize: '0.8rem' }}>
               {(() => {
                 const formats = ['GLB', 'BBMODEL', 'Shirt', 'Pants', 'OBJ', 'FBX'];
-                const maxVal = Math.max(...formats.map(f => stats.formats[f] || 0), 1);
                 const sum = formats.reduce((s, f) => s + (stats.formats[f] || 0), 0);
                 
                 if (sum === 0) {
@@ -300,16 +299,16 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
                 
                 return formats.map(f => {
                   const val = stats.formats[f] || 0;
-                  const pct = Math.round((val / maxVal) * 100);
+                  const sharePct = sum > 0 ? Math.round((val / sum) * 100) : 0;
                   const color = (f === 'Shirt' || f === 'Pants') ? '#ef4444' : (f === 'OBJ' || f === 'FBX') ? '#10b981' : '#8b5cf6';
                   return (
                     <div key={f} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f4f4f5' }}>
                         <span>{f}</span>
-                        <span style={{ color, fontWeight: 'bold' }}>{val} units ({pct}%)</span>
+                        <span style={{ color, fontWeight: 'bold' }}>{val} units ({sharePct}%)</span>
                       </div>
                       <div style={{ color, letterSpacing: '1px', userSelect: 'none' }}>
-                        [{getBlockBar(pct, 24)}]
+                        [{getBlockBar(sharePct, 24)}]
                       </div>
                     </div>
                   );
@@ -420,7 +419,7 @@ export default function DashboardView({ stats, navigateToModule }: DashboardView
           </p>
         ) : (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '16px' }}>
               {history.map((item) => (
                 <div 
                   key={item.slug} 

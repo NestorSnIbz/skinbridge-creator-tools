@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../modules/i18n';
-import { Box, Download, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Download, ArrowLeft, ExternalLink } from 'lucide-react';
 
 interface RobloxShareData {
   slug: string;
@@ -108,8 +108,16 @@ export default function ShareRobloxPage() {
         
         {/* Header */}
         <header className="glass-panel app-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-            <Box className="logo-icon" size={32} style={{ color: '#818cf8' }} />
+          <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img 
+              src="/logo.png" 
+              alt="SkinBridge Logo" 
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                objectFit: 'cover'
+              }} 
+            />
             <div>
               <h1 className="logo-text" style={{ margin: 0 }}>SkinBridge</h1>
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#a1a1aa' }}>{t('share_title_roblox')}</p>
@@ -121,7 +129,7 @@ export default function ShareRobloxPage() {
         </header>
 
         {/* Main Grid */}
-        <main className="main-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+        <main className="main-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '24px' }}>
           
           {/* Left Panel: Preview & Actions */}
           <section className="glass-panel sidebar-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -183,7 +191,7 @@ export default function ShareRobloxPage() {
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: '24px' }}>
               {/* Shirt Card */}
               <div className="template-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '16px' }}>
                 <h3 style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600 }}>{t('template_shirt_title')}</h3>

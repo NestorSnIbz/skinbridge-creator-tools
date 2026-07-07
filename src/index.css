@@ -814,6 +814,10 @@ input:checked + .checkbox-custom::after {
 
 /* Mobile & Tablet Responsiveness Enhancements */
 @media (max-width: 768px) {
+  .app-container {
+    padding: 12px;
+    gap: 16px;
+  }
   .app-header {
     flex-direction: column;
     gap: 16px;
