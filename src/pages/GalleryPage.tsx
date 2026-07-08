@@ -96,9 +96,33 @@ export default function GalleryPage() {
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#a1a1aa' }}>Community Gallery</p>
             </div>
           </div>
-          <button className="glow-btn-secondary" onClick={() => navigate('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px' }}>
-            <ArrowLeft size={16} /> {t('nav_dashboard')}
-          </button>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <a 
+              href="https://github.com/NestorSnIbz/minecraft-to-roblox-clothing-exporter/issues" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="badge" 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px', 
+                textDecoration: 'none', 
+                color: '#a1a1aa',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                borderRadius: '8px'
+              }}
+              title="Report an issue on GitHub"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+              </svg>
+              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Bugs</span>
+            </a>
+            <button className="glow-btn-secondary" onClick={() => navigate('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px' }}>
+              <ArrowLeft size={16} /> {t('nav_dashboard')}
+            </button>
+          </div>
         </header>
 
         {loading ? (
