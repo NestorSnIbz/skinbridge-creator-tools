@@ -165,9 +165,9 @@ function buildReliefBBModel(skinImage: HTMLImageElement, heightmap: any) {
   ctx.drawImage(skinImage, 0, 0, 64, 64);
   const imgData = ctx.getImageData(0, 0, 64, 64);
 
-  const pixelSize = 1.125;
-  const gridOffset = 3.9375;
-  const thickness = 0.35;
+  const THICKNESS = 0.5;
+  const baseBoundary = 4.0;
+  
   const offsets = heightmap?.offsets ?? {
     right: 4.0,
     left: 4.0,
@@ -178,61 +178,98 @@ function buildReliefBBModel(skinImage: HTMLImageElement, heightmap: any) {
   };
 
   const faceDefs = [
-    {
-      key: 'right',
-      startX: 48,
-      startY: 8,
-      getBox: (col: number, row: number, pixelOffset: number) => ({
-        center: [pixelOffset + thickness / 2, gridOffset - row * pixelSize, gridOffset - col * pixelSize],
-        size: [thickness, pixelSize, pixelSize],
-      }),
-    },
-    {
-      key: 'left',
-      startX: 32,
-      startY: 8,
-      getBox: (col: number, row: number, pixelOffset: number) => ({
-        center: [-(pixelOffset + thickness / 2), gridOffset - row * pixelSize, -gridOffset + col * pixelSize],
-        size: [thickness, pixelSize, pixelSize],
-      }),
-    },
-    {
-      key: 'top',
-      startX: 40,
-      startY: 0,
-      getBox: (col: number, row: number, pixelOffset: number) => ({
-        center: [-gridOffset + col * pixelSize, pixelOffset + thickness / 2, -gridOffset + row * pixelSize],
-        size: [pixelSize, thickness, pixelSize],
-      }),
-    },
-    {
-      key: 'bottom',
-      startX: 48,
-      startY: 0,
-      getBox: (col: number, row: number, pixelOffset: number) => ({
-        center: [gridOffset - col * pixelSize, -(pixelOffset + thickness / 2), -gridOffset + row * pixelSize],
-        size: [pixelSize, thickness, pixelSize],
-      }),
-    },
-    {
-      key: 'front',
-      startX: 40,
-      startY: 8,
-      getBox: (col: number, row: number, pixelOffset: number) => ({
-        center: [-gridOffset + col * pixelSize, gridOffset - row * pixelSize, pixelOffset + thickness / 2],
-        size: [pixelSize, pixelSize, thickness],
-      }),
-    },
-    {
-      key: 'back',
-      startX: 56,
-      startY: 8,
-      getBox: (col: number, row: number, pixelOffset: number) => ({
-        center: [gridOffset - col * pixelSize, gridOffset - row * pixelSize, -(pixelOffset + thickness / 2)],
-        size: [pixelSize, pixelSize, thickness],
-      }),
-    },
+    { key: 'right',  startX: 48, startY: 8 },
+    { key: 'left',   startX: 32, startY: 8 },
+    { key: 'top',    startX: 40, startY: 0 },
+    { key: 'bottom', startX: 48, startY: 0 },
+    { key: 'front',  startX: 40, startY: 8 },
+    { key: 'back',   startX: 56, startY: 8 },
   ] as const;
+
+  // ─── Helper: adjacent boundary pixel
+  function getBoundaryNeighbor(
+    faceKey: string,
+    row: number,
+    col: number,
+    localFaceIdx: number
+  ): { face: string; row: number; col: number } | null {
+    if (localFaceIdx === 0) { // +X local (right boundary)
+      if (col < 7) return null;
+      if (faceKey === 'front')  return { face: 'right',  row: row,     col: 0 };
+      if (faceKey === 'back')   return { face: 'left',   row: row,     col: 0 };
+      if (faceKey === 'right')  return { face: 'back',   row: row,     col: 0 };
+      if (faceKey === 'left')   return { face: 'front',  row: row,     col: 0 };
+      if (faceKey === 'top')    return { face: 'right',  row: 0,       col: 7 - row };
+      if (faceKey === 'bottom') return { face: 'right',  row: 7,       col: row };
+    }
+    if (localFaceIdx === 1) { // -X local (left boundary)
+      if (col > 0) return null;
+      if (faceKey === 'front')  return { face: 'left',   row: row,     col: 7 };
+      if (faceKey === 'back')   return { face: 'right',  row: row,     col: 7 };
+      if (faceKey === 'right')  return { face: 'front',  row: row,     col: 7 };
+      if (faceKey === 'left')   return { face: 'back',   row: row,     col: 7 };
+      if (faceKey === 'top')    return { face: 'left',   row: 0,       col: row };
+      if (faceKey === 'bottom') return { face: 'left',   row: 7,       col: 7 - row };
+    }
+    if (localFaceIdx === 2) { // +Y local (top boundary)
+      if (row > 0) return null;
+      if (faceKey === 'front')  return { face: 'top',    row: 7,       col: col };
+      if (faceKey === 'back')   return { face: 'top',    row: 0,       col: 7 - col };
+      if (faceKey === 'right')  return { face: 'top',    row: 7 - col, col: 7 };
+      if (faceKey === 'left')   return { face: 'top',    row: col,     col: 0 };
+      if (faceKey === 'top')    return { face: 'back',   row: 0,       col: 7 - col };
+      if (faceKey === 'bottom') return { face: 'front',  row: 7,       col: col };
+    }
+    if (localFaceIdx === 3) { // -Y local (bottom boundary)
+      if (row < 7) return null;
+      if (faceKey === 'front')  return { face: 'bottom', row: 0,       col: col };
+      if (faceKey === 'back')   return { face: 'bottom', row: 7,       col: 7 - col };
+      if (faceKey === 'right')  return { face: 'bottom', row: col,     col: 7 };
+      if (faceKey === 'left')   return { face: 'bottom', row: 7 - col, col: 0 };
+      if (faceKey === 'top')    return { face: 'front',  row: 0,       col: col };
+      if (faceKey === 'bottom') return { face: 'back',   row: 7,       col: 7 - col };
+    }
+    return null;
+  }
+
+  // ─── Pass 1: Build presence/offset mask
+  type PixelInfo = { active: boolean; heightVal: number; pixelOffset: number };
+  const overlayMask: Record<string, PixelInfo[][]> = {};
+
+  for (const face of faceDefs) {
+    const faceHeightmap = heightmap?.[face.key];
+    const faceDefaultOffset = offsets[face.key as keyof typeof offsets] ?? 4.0;
+    const faceMatrix: PixelInfo[][] = [];
+
+    for (let row = 0; row < 8; row++) {
+      const rowArr: PixelInfo[] = [];
+      for (let col = 0; col < 8; col++) {
+        const texRow = face.key === 'bottom' ? (7 - row) : row;
+        const px = face.startX + col;
+        const py = face.startY + texRow;
+        const idx = (py * 64 + px) * 4;
+        const alpha = imgData.data[idx + 3];
+
+        if (alpha > 10) {
+          let heightVal = faceHeightmap ? faceHeightmap[texRow]?.[col] ?? 1 : 1;
+          if (heightVal === 0) heightVal = 1;
+          const pixelOffset = (heightVal === 3 || heightVal === 4)
+            ? faceDefaultOffset + 0.175
+            : faceDefaultOffset;
+          rowArr.push({ active: true, heightVal, pixelOffset });
+        } else {
+          rowArr.push({ active: false, heightVal: 0, pixelOffset: 0 });
+        }
+      }
+      faceMatrix.push(rowArr);
+    }
+    overlayMask[face.key] = faceMatrix;
+  }
+
+  function isNeighborActive(neighbor: { face: string; row: number; col: number } | null): boolean {
+    if (!neighbor) return false;
+    return overlayMask[neighbor.face]?.[neighbor.row]?.[neighbor.col]?.active ?? false;
+  }
 
   const elements: any[] = [
     {
@@ -257,32 +294,135 @@ function buildReliefBBModel(skinImage: HTMLImageElement, heightmap: any) {
     },
   ];
 
+  // ─── Pass 2: Generate elements matching HeadBuilder
   for (const face of faceDefs) {
-    const faceHeightmap = heightmap?.[face.key];
-    const faceDefaultOffset = offsets[face.key as keyof typeof offsets] ?? 4.0;
-
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
+        const info = overlayMask[face.key][row][col];
+        if (!info.active) continue;
+
+        const texRow = face.key === 'bottom' ? (7 - row) : row;
         const px = face.startX + col;
-        const py = face.startY + row;
-        const idx = (py * 64 + px) * 4;
-        const alpha = imgData.data[idx + 3];
-        if (alpha <= 10) {
-          continue;
+        const py = face.startY + texRow;
+
+        // Boundary cap tracking for clipping
+        const needsInnerCap = [false, false, false, false];
+        for (let fi = 0; fi < 4; fi++) {
+          let hasSameFaceNeighbor = false;
+          if (fi === 0 && col < 7) {
+            const nb = overlayMask[face.key][row][col + 1];
+            if (nb?.active) {
+              hasSameFaceNeighbor = true;
+            }
+          } else if (fi === 1 && col > 0) {
+            const nb = overlayMask[face.key][row][col - 1];
+            if (nb?.active) {
+              hasSameFaceNeighbor = true;
+            }
+          } else if (fi === 2 && row > 0) {
+            const nb = overlayMask[face.key][row - 1][col];
+            if (nb?.active) {
+              hasSameFaceNeighbor = true;
+            }
+          } else if (fi === 3 && row < 7) {
+            const nb = overlayMask[face.key][row + 1][col];
+            if (nb?.active) {
+              hasSameFaceNeighbor = true;
+            }
+          }
+
+          if (!hasSameFaceNeighbor) {
+            const bNeighbor = getBoundaryNeighbor(face.key, row, col, fi);
+            if (bNeighbor && !isNeighborActive(bNeighbor)) {
+              needsInnerCap[fi] = true;
+            }
+          }
         }
 
-        let heightVal = faceHeightmap ? faceHeightmap[row]?.[col] ?? 1 : 1;
-        if (heightVal === 0) {
-          heightVal = 1;
+        // Local coordinates
+        let xMin = -4.5 + col * 1.125;
+        let xMax = -4.5 + (col + 1) * 1.125;
+        let yMin = 4.5 - (row + 1) * 1.125;
+        let yMax = 4.5 - row * 1.125;
+
+        // Clip edges to base boundary (±4.0) if adjacent face is inactive
+        if (needsInnerCap[0]) xMax = Math.min(xMax,  baseBoundary);
+        if (needsInnerCap[1]) xMin = Math.max(xMin, -baseBoundary);
+        if (needsInnerCap[2]) yMax = Math.min(yMax,  baseBoundary);
+        if (needsInnerCap[3]) yMin = Math.max(yMin, -baseBoundary);
+
+        const w = xMax - xMin;
+        const h = yMax - yMin;
+        if (w <= 0 || h <= 0) continue;
+
+        // Universal depth extension
+        let outerZ = info.pixelOffset + THICKNESS;
+        for (let fi2 = 0; fi2 < 4; fi2++) {
+          const bNeighbor = getBoundaryNeighbor(face.key, row, col, fi2);
+          if (!bNeighbor || !isNeighborActive(bNeighbor)) continue;
+          const nbInfo2 = overlayMask[bNeighbor.face][bNeighbor.row][bNeighbor.col];
+          const neighborOuterZ = nbInfo2.pixelOffset + THICKNESS;
+          outerZ = Math.max(outerZ, 4.5, neighborOuterZ);
         }
 
-        const pixelOffset = heightVal === 3 || heightVal === 4
-          ? faceDefaultOffset + 0.175
-          : faceDefaultOffset;
+        // Rotation transform mapping local to World (Three.js space)
+        let worldX_min = 0, worldX_max = 0;
+        let worldY_min = 0, worldY_max = 0;
+        let worldZ_min = 0, worldZ_max = 0;
 
-        const { center, size } = face.getBox(col, row, pixelOffset);
-        const [cx, cy, cz] = center;
-        const [sx, sy, sz] = size;
+        if (face.key === 'right') {
+          worldX_min = baseBoundary;
+          worldX_max = outerZ;
+          worldY_min = yMin;
+          worldY_max = yMax;
+          worldZ_min = -xMax;
+          worldZ_max = -xMin;
+        } else if (face.key === 'left') {
+          worldX_min = -outerZ;
+          worldX_max = -baseBoundary;
+          worldY_min = yMin;
+          worldY_max = yMax;
+          worldZ_min = xMin;
+          worldZ_max = xMax;
+        } else if (face.key === 'top') {
+          worldX_min = xMin;
+          worldX_max = xMax;
+          worldY_min = baseBoundary;
+          worldY_max = outerZ;
+          worldZ_min = yMin;
+          worldZ_max = yMax;
+        } else if (face.key === 'bottom') {
+          worldX_min = xMin;
+          worldX_max = xMax;
+          worldY_min = -outerZ;
+          worldY_max = -baseBoundary;
+          worldZ_min = -yMax;
+          worldZ_max = -yMin;
+        } else if (face.key === 'front') {
+          worldX_min = xMin;
+          worldX_max = xMax;
+          worldY_min = yMin;
+          worldY_max = yMax;
+          worldZ_min = baseBoundary;
+          worldZ_max = outerZ;
+        } else { // back
+          worldX_min = -xMax;
+          worldX_max = -xMin;
+          worldY_min = yMin;
+          worldY_max = yMax;
+          worldZ_min = -outerZ;
+          worldZ_max = -baseBoundary;
+        }
+
+        // Shift world coordinates Y by +4.0 to align in Blockbench [0, 8] space
+        const fromX = worldX_min;
+        const fromY = worldY_min + 4.0;
+        const fromZ = worldZ_min;
+
+        const toX = worldX_max;
+        const toY = worldY_max + 4.0;
+        const toZ = worldZ_max;
+
         const uuid = generateUUID();
         overlayChildren.push(uuid);
 
@@ -290,8 +430,8 @@ function buildReliefBBModel(skinImage: HTMLImageElement, heightmap: any) {
           name: `overlay_${face.key}_${row}_${col}`,
           type: 'cube',
           box_uv: false,
-          from: [cx - sx / 2, cy - sy / 2, cz - sz / 2],
-          to: [cx + sx / 2, cy + sy / 2, cz + sz / 2],
+          from: [fromX, fromY, fromZ],
+          to: [toX, toY, toZ],
           origin: [0, 0, 0],
           uuid,
           color: 5,
