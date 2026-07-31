@@ -185,7 +185,7 @@ function createReliefGlbTexture(skinImage: HTMLImageElement): Promise<THREE.Text
     texture.magFilter = THREE.NearestFilter;
     texture.generateMipmaps = false;
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.flipY = false;
+    texture.flipY = true; // Use native Three.js texture flipping
     texture.needsUpdate = true;
 
     resolve(texture);
@@ -210,7 +210,7 @@ function applyReliefGlbMaterials(group: THREE.Object3D, texture: THREE.Texture) 
       map: texture,
       roughness: 0.6,
       metalness: 0.1,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide, // Render only outer faces (matching ThreeViewer and FBX)
       transparent: isOverlay,
       alphaTest: isOverlay ? 0.1 : 0,
     });
@@ -218,24 +218,6 @@ function applyReliefGlbMaterials(group: THREE.Object3D, texture: THREE.Texture) 
   });
 }
 
-function convertReliefUvsToGlbSpace(group: THREE.Object3D) {
-  group.traverse((child) => {
-    if (!(child instanceof THREE.Mesh) || !child.geometry) {
-      return;
-    }
-
-    const uvAttr = child.geometry.getAttribute('uv');
-    if (!uvAttr || !(uvAttr instanceof THREE.BufferAttribute)) {
-      return;
-    }
-
-    for (let i = 0; i < uvAttr.count; i++) {
-      uvAttr.setY(i, 1 - uvAttr.getY(i));
-    }
-
-    uvAttr.needsUpdate = true;
-  });
-}
 
 function finalizeReliefGlbExport(group: THREE.Object3D): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -276,7 +258,7 @@ export function exportToGLBWithRelief(
       .then((texture) => {
         const exportGroup = buildReliefGlbExportGroup(skinImage, heightmap);
         applyReliefGlbMaterials(exportGroup, texture);
-        convertReliefUvsToGlbSpace(exportGroup);
+        // Do not manually convert UVs since flipY=true handles it natively in GLTFExporter
 
         return finalizeReliefGlbExport(exportGroup);
       })

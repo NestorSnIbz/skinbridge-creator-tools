@@ -555,7 +555,7 @@ function buildVoxelizedOverlayWithReliefInternal(
   // The adjacent face overlay starts at ±(4.0 + boundaryInset), so we clip to that boundary:
   //   clipped width = (4.0 + boundaryInset) − 3.375
   //   center shift  = −(1.125 − clipped width)/2
-  const THICKNESS    = 0.35;
+  const THICKNESS    = 0.5;  // Minecraft outer layer sits exactly 0.5u proud of the head base (9×9×9 vs 8×8×8)
 
   // Helper to find the adjacent boundary pixel on another face
   function getBoundaryNeighbor(
@@ -634,12 +634,8 @@ function buildVoxelizedOverlayWithReliefInternal(
 
         // Perform face culling (0:+X, 1:-X, 2:+Y, 3:-Y, 4:+Z outer, 5:-Z inner)
         const visibleFaces = [false, false, false, false, true, false];
-
-        const getPriority = (f: string) => {
-          if (f === 'top' || f === 'bottom') return 3;
-          if (f === 'front' || f === 'back') return 2;
-          return 1;
-        };
+        // Track boundary edges that need an inner-corner cap (adjacent face inactive)
+        const needsInnerCap = [false, false, false, false];
 
         for (let fi = 0; fi < 4; fi++) {
           let hasSameFaceNeighbor = false;
@@ -680,33 +676,22 @@ function buildVoxelizedOverlayWithReliefInternal(
           } else {
             const bNeighbor = getBoundaryNeighbor(face.key, row, col, fi);
             if (bNeighbor) {
-              // This is a boundary edge!
-              // Add a tiny overlap of 0.005 to prevent rendering seams / Z-fighting along the corner edges
-              let limitCoord = baseBoundary;
               const isNeighborActiveVal = isNeighborActive(bNeighbor);
               let neighborOffset = 0;
               if (isNeighborActiveVal) {
                 const nbInfo = overlayMask[bNeighbor.face][bNeighbor.row][bNeighbor.col];
                 neighborOffset = nbInfo.pixelOffset;
-                limitCoord = neighborOffset + THICKNESS;
               }
-
-              // Check priority: if current face has higher priority than neighbor face, add 0.005 overlap
-              if (getPriority(face.key) > getPriority(bNeighbor.face)) {
-                limitCoord += 0.005;
-              }
-
-              // Clip the voxel boundary to the limit coordinate
-              if (fi === 0) xMax = limitCoord;
-              else if (fi === 1) xMin = -limitCoord;
-              else if (fi === 2) yMax = limitCoord;
-              else if (fi === 3) yMin = -limitCoord;
 
               // Cull the boundary side face only if the neighbor is active and has equal or higher offset
               if (isNeighborActiveVal && neighborOffset >= info.pixelOffset) {
                 visibleFaces[fi] = false;
               } else {
                 visibleFaces[fi] = true;
+                // Mark for inner-corner cap: adjacent face is inactive → gap needs filling
+                if (!isNeighborActiveVal) {
+                  needsInnerCap[fi] = true;
+                }
               }
             } else {
               visibleFaces[fi] = true;
@@ -714,48 +699,53 @@ function buildVoxelizedOverlayWithReliefInternal(
           }
         }
 
-        // Apply secondary priority-based coordinate offsets for perpendicular side walls to prevent Z-fighting at corners without leaving gaps
-        for (let fi = 0; fi < 4; fi++) {
-          if (!visibleFaces[fi]) continue;
-          
-          if (fi === 0 || fi === 1) { // X-facing faces (check Y-facing boundaries)
-            const bTop = getBoundaryNeighbor(face.key, row, col, 2);
-            if (bTop && isNeighborActive(bTop) && getPriority(face.key) < getPriority(bTop.face)) {
-              if (fi === 0) xMax -= 0.005;
-              else if (fi === 1) xMin += 0.005;
-            }
-            const bBottom = getBoundaryNeighbor(face.key, row, col, 3);
-            if (bBottom && isNeighborActive(bBottom) && getPriority(face.key) < getPriority(bBottom.face)) {
-              if (fi === 0) xMax -= 0.005;
-              else if (fi === 1) xMin += 0.005;
-            }
-          } else if (fi === 2 || fi === 3) { // Y-facing faces (check X-facing boundaries)
-            const bRight = getBoundaryNeighbor(face.key, row, col, 0);
-            if (bRight && isNeighborActive(bRight) && getPriority(face.key) < getPriority(bRight.face)) {
-              if (fi === 2) yMax -= 0.005;
-              else if (fi === 3) yMin += 0.005;
-            }
-            const bLeft = getBoundaryNeighbor(face.key, row, col, 1);
-            if (bLeft && isNeighborActive(bLeft) && getPriority(face.key) < getPriority(bLeft.face)) {
-              if (fi === 2) yMax -= 0.005;
-              else if (fi === 3) yMin += 0.005;
-            }
-          }
-        }
+        // ── Boundary clipping for inactive adjacent faces ─────────────────────
+        // When the face adjacent to this voxel's edge has NO active overlay pixel,
+        // the voxel would overhang the head-base boundary (±4.0) by 0.5u, leaving
+        // an inner-corner gap visible from outside.  Clipping that edge to the
+        // head-base level (±baseBoundary) removes the overhang.  The resulting
+        // side face falls exactly at the head-base surface, sealing the gap with
+        // zero extra geometry and zero Z-fighting (head-base face spans Z≤4.0;
+        // our clipped face spans Z∈[4.0,4.5] – no overlap).
+        if (needsInnerCap[0]) xMax = Math.min(xMax,  baseBoundary);  // +X: clip right edge
+        if (needsInnerCap[1]) xMin = Math.max(xMin, -baseBoundary);  // -X: clip left edge
+        if (needsInnerCap[2]) yMax = Math.min(yMax,  baseBoundary);  // +Y: clip top edge
+        if (needsInnerCap[3]) yMin = Math.max(yMin, -baseBoundary);  // -Y: clip bottom edge
 
         const w = xMax - xMin;
         const h = yMax - yMin;
+        if (w <= 0 || h <= 0) continue; // fully clipped — nothing to render
+
+        // ── Universal boundary depth extension ────────────────────────────────
+        // At every boundary edge adjacent to an ACTIVE neighbor face, extend this
+        // voxel's extrusion depth (outerZ) so it reaches the neighbor's full natural
+        // grid extent (4.5 units) AND matches or exceeds the neighbor's own relief depth.
+        // (Edges with INACTIVE neighbors were already clipped above, so no extension needed there.)
+        let outerZ = info.pixelOffset + THICKNESS;
+
+        for (let fi2 = 0; fi2 < 4; fi2++) {
+          const bNeighbor = getBoundaryNeighbor(face.key, row, col, fi2);
+          if (!bNeighbor || !isNeighborActive(bNeighbor)) continue;
+          const nbInfo2 = overlayMask[bNeighbor.face][bNeighbor.row][bNeighbor.col];
+          const neighborOuterZ = nbInfo2.pixelOffset + THICKNESS;
+          // Extend to cover the neighbor's natural grid boundary AND their relief depth.
+          outerZ = Math.max(outerZ, 4.5, neighborOuterZ);
+        }
+
+        // Solid thickness from base head surface to the resolved outer relief face
+        const voxelThickness = outerZ - baseBoundary;
 
         // Local center coords
         const local_cx = xMin + w / 2;
         const local_cy = yMin + h / 2;
-        const local_cz = info.pixelOffset + THICKNESS / 2;
+        const local_cz = baseBoundary + voxelThickness / 2;
 
         const geom = buildCulledBoxGeometry(
-          w, h, THICKNESS,
+          w, h, voxelThickness,
           info.uMin, info.uMax, info.vMin, info.vMax,
           visibleFaces
         );
+
         geom.translate(local_cx, local_cy, local_cz);
         face.applyRotation(geom);
         geometries.push(geom);
@@ -795,7 +785,7 @@ export function buildVoxelizedOverlayWithRelief(
 export function buildVoxelizedOverlayWithReliefForExport(
   skinImage: HTMLImageElement,
   heightmap?: any,
-  boundaryInset = 0.02
+  boundaryInset = 0
 ): THREE.Group {
   return buildVoxelizedOverlayWithReliefInternal(skinImage, heightmap, boundaryInset);
 }
